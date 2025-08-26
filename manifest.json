@@ -2,7 +2,7 @@
 {
   "domain": "aiks-custom-card",
   "name": "Aiks Custom Card",
-  "documentation": "https://github.com/yyqclhy/HacsRosCard.git",
+  "documentation": "https://github.com/yyqclhy/HacsRosCard",
   "dependencies": [],
   "codeowners": ["@yyqclhy"],
   "requirements": [],
