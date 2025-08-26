@@ -2326,11 +2326,12 @@ window.customCards.push(
   },
   {
   type: 'aiks-weather-card',
-  name: navigator.language.startsWith('zh') ? '天气(ROS)1' : 'Weather(ROS)',
+  name: navigator.language.startsWith('zh') ? '天气(ROS)' : 'Weather(ROS)',
   description: navigator.language.startsWith('zh') ? '可以记录多个天气实体' : 'Multiple weather entities can be recorded',
   preview: true // 启用预览
   }
 
 );
+
 
 
