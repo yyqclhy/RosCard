@@ -69,11 +69,12 @@ class AiksControlBase extends HTMLElement {
   _createIcon(iconPath) {
     const icon = document.createElement('img');
 
-    const ts = new Date().getTime();  // 当前时间戳
+    //const ts = new Date().getTime();  // 当前时间戳
     //当更改了图片内容但文件名未变，浏览器会以为它还是旧的资源，直接使用本地缓存，而不重新加载最新版本。
     //所以这里加时间戳
     //注：在开发环境使用时间戳，生产环境还是修改文件名好，特别是更新用户的资源时
-    icon.src = `${iconPath || this._translations[this._language].defaultIconPath}?t=${ts}`; 
+    //icon.src = `${iconPath || this._translations[this._language].defaultIconPath}?t=${ts}`; 
+    icon.src = `${iconPath || this._translations[this._language].defaultIconPath}`; 
     // icon.src = iconPath || this._translations[this._language].defaultIconPath;
     icon.style.position = 'absolute';
     icon.style.top = '50px';
@@ -2329,4 +2330,5 @@ window.customCards.push(
   description: navigator.language.startsWith('zh') ? '可以记录多个天气实体' : 'Multiple weather entities can be recorded',
   preview: true // 启用预览
   }
+
 );
