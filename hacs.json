@@ -3,5 +3,5 @@
   "content_in_root": true,
   "filename": "HacsRosCard.js",  
   "render_readme": true,
-  "version": "1.0.0", 
+  "version": "1.0.2", 
   "homeassistant": "2023.7.0"
