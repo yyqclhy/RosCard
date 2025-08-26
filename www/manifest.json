@@ -1,0 +1,11 @@
+
+{
+  "domain": "aiks-custom-card",
+  "name": "Aiks Custom Card",
+  "documentation": "https://github.com/yyqclhy/HacsRosCard",
+  "dependencies": [],
+  "codeowners": ["@yyqclhy"],
+  "requirements": [],
+  "version": "1.0.0",
+  "iot_class": "cloud_polling"
+}
