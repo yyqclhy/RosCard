@@ -1,1 +1,5 @@
-
+{
+  "name": "Aiks Custom Card",
+  "content_in_root": true,
+  "filename": "Simple-Control-Base80.js"
+}
