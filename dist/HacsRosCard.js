@@ -23,7 +23,7 @@ class AiksControlBase extends HTMLElement {
         executionModes: {
           immediate: '立即执行',
           delayed: '延迟执行',
-          popup: '弹窗询问'
+          popup: '弹窗询问1'
         },
         independentDisplay: '是否独立显示',
         yes: '是',
@@ -2332,3 +2332,4 @@ window.customCards.push(
   }
 
 );
+
