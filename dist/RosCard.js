@@ -123,7 +123,8 @@ class AiksTvCard extends AiksControlBase {
       ...config, 
       tv_name: config.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV'),
       entities: Array.isArray(config?.entities) ? [...config.entities] : [],
-      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_tv.png' // 自定义图标路径 
+      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_tv.png', // 自定义图标路径 
+      tv_type: config.tv_type || 'android_tv', // 新增属性，默认 android_tv
     };
     if (this._hass) this.render();
   }
@@ -208,7 +209,9 @@ class AiksTvCard extends AiksControlBase {
     const language = navigator.language.startsWith('zh') ? 'zh' : 'en';
     return {
       tv_name: language === 'zh' ? '未命名电视' : 'Unnamed TV',
-      entities: []
+      entities: [],
+      tv_type: 'android_tv', // 默认 Android TV
+      media_play_entity: ''  // 播放器实体默认空
     };
   }
 }
@@ -243,7 +246,6 @@ class AiksTvCardEditor extends AiksControlBase {
     };
   }
 
-    //获取uuid
   generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       const r = Math.random() * 16 | 0;
@@ -253,39 +255,27 @@ class AiksTvCardEditor extends AiksControlBase {
   }
 
   setConfig(config) {
-
-    // 添加 UUID 生成逻辑（只在首次配置时执行）
     const newConfig = { ...config };
+    if (!newConfig.id) newConfig.id = this.generateUUID();
 
-    if (!newConfig.id) {
-      newConfig.id = this.generateUUID(); // 只在第一次赋值
-    }
     this._config = {
-      ...newConfig,
-      id: newConfig.id, // ✅ 确保显式包含 id 字段
-      tv_name: newConfig.tv_name || defaultName,
-      entities: Array.isArray(newConfig?.entities) ? [...newConfig.entities] : []
+      type: newConfig.type || 'custom:aiks-tv-card',
+      id: newConfig.id,
+      tv_type: newConfig.tv_type || 'android_tv',
+      tv_name: newConfig.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV'),
+      media_play_entity: newConfig.media_play_entity || '',
+      entities: Array.isArray(newConfig.entities) ? [...newConfig.entities] : []
     };
 
-
-      // 确保 uuid 被包含在最终配置中
-    this.dispatchEvent(new CustomEvent('config-changed', { 
-      detail: { 
-      config: {
-        ...this._config 
-      }
-    }
-    }));
-
+    this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
     this.render();
   }
 
   set hass(hass) {
     this._hass = hass;
-        // 首次渲染时才加载图片和其他资源
     if (this.firstRender) {
       this.render();
-      this.firstRender = false;  // 标记首次渲染已完成
+      this.firstRender = false;
     }
   }
 
@@ -296,209 +286,221 @@ class AiksTvCardEditor extends AiksControlBase {
     const container = document.createElement('div');
     container.style.padding = '16px';
 
-    const tvNameWrapper = document.createElement('div');
-    tvNameWrapper.style.marginBottom = '10px';
-    tvNameWrapper.style.display = 'flex';
-    tvNameWrapper.style.alignItems = 'center';
+    // TV 类型选择
+    const tvTypeWrapper = document.createElement('div');
+    tvTypeWrapper.style.marginBottom = '10px';
+    tvTypeWrapper.style.display = 'flex';
+    tvTypeWrapper.style.alignItems = 'center';
 
-    const tvNameLabel = document.createElement('span');
-    tvNameLabel.innerText = this._translations[this._language].nameLabel;
-    tvNameLabel.style.width = '100px';
-    tvNameWrapper.appendChild(tvNameLabel);
+    const tvTypeLabel = document.createElement('span');
+    tvTypeLabel.innerText = this._language === 'zh' ? '设备类型: ' : 'Device Type: ';
+    tvTypeLabel.style.width = '100px';
+    tvTypeWrapper.appendChild(tvTypeLabel);
 
-    const tvNameInput = document.createElement('input');
-    tvNameInput.type = 'text';
-    tvNameInput.value = this._config.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV');
-    tvNameInput.style.width = '200px';
-    tvNameInput.style.marginRight = '10px';
-    tvNameInput.addEventListener('blur', () => {
-      if (this._config.tv_name !== tvNameInput.value) {
-        this._config.tv_name = tvNameInput.value;
-        this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: this._config } }));
-      }
+    const tvTypeSelect = document.createElement('select');
+    tvTypeSelect.style.width = '120px';
+    [
+      { value: 'apple_tv', label: this._language === 'zh' ? 'Apple TV' : 'Apple TV' },
+      { value: 'android_tv', label: this._language === 'zh' ? '安卓电视' : 'Android TV' }
+    ].forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.text = opt.label;
+      if (this._config.tv_type === opt.value) option.selected = true;
+      tvTypeSelect.appendChild(option);
     });
-    tvNameWrapper.appendChild(tvNameInput);
+    tvTypeSelect.addEventListener('change', () => {
+      this._config.tv_type = tvTypeSelect.value;
+      if (tvTypeSelect.value === 'android_tv') this._config.media_play_entity = '';
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+      this.render();
+    });
+    tvTypeWrapper.appendChild(tvTypeSelect);
+    container.appendChild(tvTypeWrapper);
 
-    container.appendChild(tvNameWrapper);
+    // Apple TV 专用 media_player 选择
+    if (this._config.tv_type === 'apple_tv') {
+      const mediaWrapper = document.createElement('div');
+      mediaWrapper.style.marginBottom = '10px';
+      mediaWrapper.style.display = 'flex';
+      mediaWrapper.style.alignItems = 'center';
 
+      const mediaLabel = document.createElement('span');
+      mediaLabel.innerText = this._language === 'zh' ? '播放实体: ' : 'Media Player: ';
+      mediaLabel.style.width = '100px';
+      mediaWrapper.appendChild(mediaLabel);
+
+      const mediaSelect = document.createElement('select');
+      mediaSelect.style.width = '200px';
+      mediaSelect.innerHTML = `<option value="">${this._translations[this._language].selectEntity}</option>`;
+      Object.keys(this._hass.states).forEach(entityId => {
+        if (entityId.startsWith('media_player.')) {
+          const option = document.createElement('option');
+          option.value = entityId;
+          option.text = this._hass.states[entityId]?.attributes?.friendly_name || entityId;
+          if (entityId === this._config.media_play_entity) option.selected = true;
+          mediaSelect.appendChild(option);
+        }
+      });
+      mediaSelect.addEventListener('change', () => {
+        this._config.media_play_entity = mediaSelect.value;
+        this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+      });
+      mediaWrapper.appendChild(mediaSelect);
+      container.appendChild(mediaWrapper);
+    }
+
+    // 电视名称
+    const nameWrapper = document.createElement('div');
+    nameWrapper.style.marginBottom = '10px';
+    nameWrapper.style.display = 'flex';
+    nameWrapper.style.alignItems = 'center';
+
+    const nameLabel = document.createElement('span');
+    nameLabel.innerText = this._translations[this._language].nameLabel;
+    nameLabel.style.width = '100px';
+    nameWrapper.appendChild(nameLabel);
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = this._config.tv_name;
+    nameInput.style.width = '200px';
+    nameInput.addEventListener('blur', () => {
+      this._config.tv_name = nameInput.value;
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+    });
+    nameWrapper.appendChild(nameInput);
+    container.appendChild(nameWrapper);
+
+    // 实体列表
     const entityContainer = document.createElement('div');
     entityContainer.id = 'entityContainer';
-    const predefinedKeys = [
-      'POWER', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'ENTER', 'BACK',
-      'PLAY', 'PAUSE', 'VOLUME_UP', 'VOLUME_DOWN', 'MUTE','UN_MUTE',
-      'SETTINGS', 'HOME', 'MENU'
-    ];
-
-    this._config.entities = predefinedKeys.map((key, index) => {
-      return this._config.entities[index] || { key, type: '', entity_id: '', value: '' };
+    const predefinedKeys = ['POWER','UP','DOWN','LEFT','RIGHT','ENTER','BACK','PLAY','PAUSE','VOLUME_UP','VOLUME_DOWN','MUTE','UN_MUTE','SETTINGS','HOME','MENU'];
+    this._config.entities = predefinedKeys.map((k,i)=>this._config.entities[i]||{key:k,type:'',entity_id:'',value:''});
+    this._config.entities.forEach((cfg,idx)=>{
+      entityContainer.appendChild(this._createEntityRow(idx,cfg,this._hass));
     });
-
-    this._config.entities.forEach((config, index) => {
-      const entityWrapper = this._createEntityRow(index, config, this._hass);
-      entityContainer.appendChild(entityWrapper);
-    });
-
     container.appendChild(entityContainer);
+
     this.appendChild(container);
   }
 
   _createEntityRow(index, config, hass) {
-    const entityWrapper = document.createElement('div');
-    entityWrapper.style.marginBottom = '10px';
-    entityWrapper.style.display = 'flex';
-    entityWrapper.style.alignItems = 'center';
+    const row = document.createElement('div');
+    row.style.marginBottom = '10px';
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
 
     const keyLabel = document.createElement('span');
     keyLabel.innerText = `${config.key}: `;
     keyLabel.style.width = '100px';
-    entityWrapper.appendChild(keyLabel);
+    row.appendChild(keyLabel);
 
     const entitySelect = document.createElement('select');
     entitySelect.style.width = '200px';
-    entitySelect.style.textOverflow = 'ellipsis';
-    entitySelect.style.overflow = 'hidden';
-    entitySelect.style.whiteSpace = 'nowrap';
     entitySelect.innerHTML = `<option value="">${this._translations[this._language].selectEntity}</option>`;
-    const entities = hass.states;
-    Object.keys(entities).forEach(entity => {
-      if (entity.startsWith('media_player.') || entity.startsWith('remote.') || entity.startsWith('select.')) {
-        const option = document.createElement('option');
-        option.value = entity;
-        const friendlyName = hass.states[entity]?.attributes?.friendly_name || entity;
-        option.text = `${friendlyName} (${entity})`;
-        if (entity === config.entity_id) option.selected = true;
-        entitySelect.appendChild(option);
+    Object.keys(hass.states).forEach(eid=>{
+      if (eid.startsWith('media_player.')||eid.startsWith('remote.')||eid.startsWith('select.')){
+        const opt=document.createElement('option');
+        opt.value=eid;
+        opt.text=(hass.states[eid]?.attributes?.friendly_name)||eid;
+        if(eid===config.entity_id) opt.selected=true;
+        entitySelect.appendChild(opt);
       }
     });
+    row.appendChild(entitySelect);
 
-    const componentContainer = document.createElement('div');
-    componentContainer.style.marginLeft = '10px';
+    const compContainer=document.createElement('div');
+    compContainer.style.marginLeft='10px';
+    row.appendChild(compContainer);
 
-    entityWrapper.appendChild(entitySelect);
-    entityWrapper.appendChild(componentContainer);
-
-    const updateConfig = () => {
-      const newEntityId = entitySelect.value;
-      const newType = newEntityId ? newEntityId.split('.')[0] : '';
-      const newValue = componentContainer.querySelector('select')?.value || componentContainer.querySelector('input')?.value || config.value || '';
-
-      const newConfig = { key: config.key, type: newType, entity_id: newEntityId, value: newValue };
-      const newEntities = [...this._config.entities];
-      newEntities[index] = newConfig;
-      this._config.entities = newEntities;
-      this._config.tv_name = this._config.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV');
-      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: this._config } }));
+    const updateConfig=()=>{
+      const eid=entitySelect.value;
+      const type=eid?eid.split('.')[0]:'';
+      const val=compContainer.querySelector('select')?.value||compContainer.querySelector('input')?.value||config.value||'';
+      const newCfg={key:config.key,type,entity_id:eid,value:val};
+      const arr=[...this._config.entities];
+      arr[index]=newCfg;
+      this._config.entities=arr;
+      this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:{...this._config}}}));
     };
 
-    const updateComponent = () => {
-      componentContainer.innerHTML = '';
-      const entityId = entitySelect.value;
-      const type = entityId ? entityId.split('.')[0] : '';
+    const renderSubComp=()=>{
+      compContainer.innerHTML='';
+      const eid=entitySelect.value;
+      const type=eid?eid.split('.')[0]:'';
 
-      if (entityId && entitySelect.selectedIndex >= 0) {
-        const friendlyName = hass.states[entityId]?.attributes?.friendly_name || entityId;
-        entitySelect.options[entitySelect.selectedIndex].text = friendlyName;
-      }
-
-      let inputElement = null;
-
-      if (type === 'media_player') {
-        const commandSelect = document.createElement('select');
-        commandSelect.style.width = '200px';
-        commandSelect.style.textOverflow = 'ellipsis';
-        commandSelect.style.overflow = 'hidden';
-        commandSelect.style.whiteSpace = 'nowrap';
-        commandSelect.innerHTML = `<option value="">${this._translations[this._language].selectCommand}</option>`;
-        this._translations[this._language].mediaCommands.forEach(cmd => {
-          const option = document.createElement('option');
-          option.value = cmd.value;
-          option.text = cmd.label;
-          if (cmd.value === config.value) option.selected = true;
-          commandSelect.appendChild(option);
+      let inputEl=null;
+      if(type==='media_player'){
+        const cmdSel=document.createElement('select');
+        cmdSel.style.width='200px';
+        cmdSel.innerHTML=`<option value="">${this._translations[this._language].selectCommand}</option>`;
+        this._translations[this._language].mediaCommands.forEach(cmd=>{
+          const opt=document.createElement('option');
+          opt.value=cmd.value;
+          opt.text=cmd.label;
+          if(cmd.value===config.value) opt.selected=true;
+          cmdSel.appendChild(opt);
         });
-        commandSelect.addEventListener('change', updateConfig);
-        componentContainer.appendChild(commandSelect);
-        inputElement = commandSelect;
-      } else if (type === 'select' && hass.states[entityId]?.attributes?.options) {
-        const optionSelect = document.createElement('select');
-        optionSelect.style.width = '200px';
-        optionSelect.style.textOverflow = 'ellipsis';
-        optionSelect.style.overflow = 'hidden';
-        optionSelect.style.whiteSpace = 'nowrap';
-        optionSelect.innerHTML = `<option value="">${this._translations[this._language].selectOption}</option>`;
-        hass.states[entityId].attributes.options.forEach(opt => {
-          const option = document.createElement('option');
-          option.value = opt;
-          option.text = opt;
-          if (opt === config.value) option.selected = true;
-          optionSelect.appendChild(option);
+        cmdSel.addEventListener('change',updateConfig);
+        compContainer.appendChild(cmdSel);
+        inputEl=cmdSel;
+      } else if(type==='select' && hass.states[eid]?.attributes?.options){
+        const optSel=document.createElement('select');
+        optSel.style.width='200px';
+        optSel.innerHTML=`<option value="">${this._translations[this._language].selectOption}</option>`;
+        hass.states[eid].attributes.options.forEach(o=>{
+          const opt=document.createElement('option');
+          opt.value=o; opt.text=o;
+          if(o===config.value) opt.selected=true;
+          optSel.appendChild(opt);
         });
-        optionSelect.addEventListener('change', updateConfig);
-        componentContainer.appendChild(optionSelect);
-        inputElement = optionSelect;
-      } else if (type === 'remote') {
-        const valueInput = document.createElement('input');
-        valueInput.type = 'text';
-        valueInput.value = config.value || '';
-        valueInput.placeholder = this._translations[this._language].enterCommand;
-        valueInput.style.marginRight = '10px';
-        valueInput.style.width = '200px';
-        valueInput.addEventListener('blur', () => {
-          if (config.value !== valueInput.value) {
-            updateConfig();
-          }
-        });
-        componentContainer.appendChild(valueInput);
-        inputElement = valueInput;
+        optSel.addEventListener('change',updateConfig);
+        compContainer.appendChild(optSel);
+        inputEl=optSel;
+      } else if(type==='remote'){
+        const inp=document.createElement('input');
+        inp.type='text';
+        inp.value=config.value||'';
+        inp.style.width='200px';
+        inp.placeholder=this._translations[this._language].enterCommand;
+        inp.addEventListener('blur',()=>{updateConfig();});
+        compContainer.appendChild(inp);
+        inputEl=inp;
       } else {
-        componentContainer.innerHTML = `<span>${this._translations[this._language].validEntity}</span>`;
+        compContainer.innerHTML=`<span>${this._translations[this._language].validEntity}</span>`;
       }
 
-      if (inputElement) {
-        const sendButton = this._createButton(this._translations[this._language].sendButton, () => {
-          if (type === 'media_player') {
-            const service = inputElement?.value || config.value;
-            if (service.startsWith('volume_mute_')) {
-              const isMuted = service === 'volume_mute_true';
-              hass.callService('media_player', 'volume_mute', { entity_id: entityId, is_volume_muted: isMuted });
-            } else {
-              hass.callService('media_player', service, { entity_id: entityId });
-            }
-          } else if (type === 'remote') {
-            hass.callService('remote', 'send_command', { entity_id: entityId, command: inputElement?.value || config.value });
-          } else if (type === 'select') {
-            hass.callService('select', 'select_option', { entity_id: entityId, option: inputElement?.value || config.value });
-          }
-          updateConfig();
-        });
-        componentContainer.appendChild(sendButton);
-
-        const clearButton = this._createButton(this._translations[this._language].clearButton, () => {
-          entitySelect.value = '';
-          componentContainer.innerHTML = `<span>${this._translations[this._language].validEntity}</span>`;
-          const newConfig = { key: config.key, type: '', entity_id: '', value: '' };
-          const newEntities = [...this._config.entities];
-          newEntities[index] = newConfig;
-          this._config.entities = newEntities;
-          this._config.tv_name = this._config.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV');
-          this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: this._config } }));
-        });
-        componentContainer.appendChild(clearButton);
+      if(inputEl){
+        const saveBtn=this._createButton(this._translations[this._language].sendButton,updateConfig);
+        compContainer.appendChild(saveBtn);
       }
     };
 
-    entitySelect.addEventListener('change', updateComponent);
+    entitySelect.addEventListener('change',renderSubComp);
+    if(config.entity_id){entitySelect.value=config.entity_id;renderSubComp();}
 
-    if (config.entity_id) {
-      entitySelect.value = config.entity_id;
-      updateComponent();
-    }
-
-    return entityWrapper;
+    return row;
   }
 
+  static async getConfigElement(){
+    return document.createElement('aiks-tv-card-editor');
+  }
 
+  static getStubConfig(){
+    const language = navigator.language.startsWith('zh') ? 'zh' : 'en';
+    return {
+      type:'custom:aiks-tv-card',
+      id:'',
+      tv_type:'android_tv',
+      tv_name:language==='zh'?'未命名电视':'Unnamed TV',
+      media_play_entity:'',
+      entities:[]
+    };
+  }
 }
+
+
 
 class AiksLightCard extends AiksControlBase {
   setConfig(config) {
@@ -2326,12 +2328,11 @@ window.customCards.push(
   },
   {
   type: 'aiks-weather-card',
-  name: navigator.language.startsWith('zh') ? '天气(ROS)' : 'Weather(ROS)',
+  name: navigator.language.startsWith('zh') ? '天气(ROS)1' : 'Weather(ROS)',
   description: navigator.language.startsWith('zh') ? '可以记录多个天气实体' : 'Multiple weather entities can be recorded',
   preview: true // 启用预览
   }
 
 );
-
 
 
