@@ -86,6 +86,8 @@ class AiksControlBase extends HTMLElement {
 }
 
 class AiksTvCard extends AiksControlBase {
+
+
   constructor() {
     super();
     this._translations = {
@@ -148,6 +150,7 @@ class AiksTvCard extends AiksControlBase {
 
     // 添加图片
     card.appendChild(this._createIcon(this._config.icon_path));
+
 
     const controlPanel = document.createElement('div');
     controlPanel.style.padding = '16px';
@@ -217,6 +220,7 @@ class AiksTvCard extends AiksControlBase {
 }
 
 class AiksTvCardEditor extends AiksControlBase {
+  
   constructor() {
     super();
     this._translations = {
@@ -299,6 +303,24 @@ class AiksTvCardEditor extends AiksControlBase {
 
     const tvTypeSelect = document.createElement('select');
     tvTypeSelect.style.width = '120px';
+    
+        // 放在 AiksTvCardEditor 类里（比如 constructor 上方或类内任意可访问处）
+    const REMOTE_DEFAULTS = {
+      android_tv: {
+        POWER:'POWER', UP:'UP', DOWN:'DOWN', LEFT:'LEFT', RIGHT:'RIGHT',
+        ENTER:'ENTER', BACK:'BACK', PLAY:'PLAY', PAUSE:'PAUSE',
+        VOLUME_UP:'VOLUME_UP', VOLUME_DOWN:'VOLUME_DOWN',
+        MUTE:'MUTE', UN_MUTE:'UNMUTE', SETTINGS:'SETTINGS', HOME:'HOME', MENU:'MENU'
+      },
+      apple_tv: {
+        // Apple TV 常见命令名（按你的集成实际支持的命令调整）
+        POWER:'suspend', UP:'up', DOWN:'down', LEFT:'left', RIGHT:'right',
+        ENTER:'select', BACK:'menu', PLAY:'play', PAUSE:'pause',
+        VOLUME_UP:'volume_up', VOLUME_DOWN:'volume_down',
+        MUTE:'mute', UN_MUTE:'', SETTINGS:'wakeup', HOME:'home', MENU:'menu'
+      }
+    };
+
     [
       { value: 'apple_tv', label: this._language === 'zh' ? 'Apple TV' : 'Apple TV' },
       { value: 'android_tv', label: this._language === 'zh' ? '安卓电视' : 'Android TV' }
@@ -458,16 +480,34 @@ class AiksTvCardEditor extends AiksControlBase {
         optSel.addEventListener('change',updateConfig);
         compContainer.appendChild(optSel);
         inputEl=optSel;
-      } else if(type==='remote'){
-        const inp=document.createElement('input');
+      } else if (type==='remote'){
+        const inp = document.createElement('input');
         inp.type='text';
-        inp.value=config.value||'';
+        // 若当前没有值，用 tv_type + key 的默认值预填
+        if (!config.value) {
+          const d = REMOTE_DEFAULTS[this._config.tv_type]?.[config.key] || '';
+          inp.value = d;
+        } else {
+          inp.value = config.value;
+        }
         inp.style.width='200px';
         inp.placeholder=this._translations[this._language].enterCommand;
-        inp.addEventListener('blur',()=>{updateConfig();});
+        inp.addEventListener('blur', ()=>{ updateConfig(); });
         compContainer.appendChild(inp);
-        inputEl=inp;
-      } else {
+
+        // 恢复默认按钮（仍然可编辑）
+        const resetBtn = this._createButton(
+          this._language==='zh' ? '恢复默认' : 'Reset Default',
+          () => {
+            const d = REMOTE_DEFAULTS[this._config.tv_type]?.[config.key] || '';
+            inp.value = d;
+            updateConfig();
+          }
+        );
+        compContainer.appendChild(resetBtn);
+        inputEl = inp;
+      }
+      else {
         compContainer.innerHTML=`<span>${this._translations[this._language].validEntity}</span>`;
       }
 
@@ -2334,5 +2374,4 @@ window.customCards.push(
   }
 
 );
-
 
