@@ -2391,7 +2391,201 @@ class AiksSwitchCardEditor extends AiksControlBase {
   }
 }
 
+// Host Card - 用于管理多个 remote 实体
+class AiksHostCard extends AiksControlBase {
+  setConfig(config) {
+    this._config = {
+      ...config,
+      entities: Array.isArray(config?.entities) ? [...config.entities] : [],
+      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_host.png' // 自定义图标路径
+    };
+    if (this._hass) this.render();
+  }
 
+  set hass(hass) {
+    this._hass = hass;
+    // 首次渲染时才加载图片和其他资源
+    if (this.firstRender) {
+      if (this._config) this.render();
+      this.firstRender = false;  // 标记首次渲染已完成
+    }
+  }
+
+  render() {
+    if (!this._hass || !this._config) return;
+    this.innerHTML = '';
+
+    const card = document.createElement('ha-card');
+    card.header = this._translations[this._language].cardTitle(this._language === 'zh' ? '主机控制' : 'Host Control');
+
+    // 添加图片
+    card.appendChild(this._createIcon(this._config.icon_path));
+
+    const content = document.createElement('div');
+    content.style.padding = '16px';
+    content.style.position = 'relative';
+
+    if (this._config.entities.length > 0) {
+      this._config.entities.forEach(entity => {
+        const friendlyName = this._hass.states[entity.entity_id]?.attributes?.friendly_name || entity.entity_id;
+        const entityDiv = document.createElement('div');
+        entityDiv.style.marginBottom = '10px';
+        entityDiv.innerHTML = `<div>${this._translations[this._language].entity}: ${friendlyName}</div>`;
+        content.appendChild(entityDiv);
+      });
+    } else {
+      content.innerHTML = `<div>${this._translations[this._language].validEntity}</div>`;
+    }
+
+    card.appendChild(content);
+    this.appendChild(card);
+  }
+
+  static async getConfigElement() {
+    return document.createElement('aiks-host-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
+}
+
+class AiksHostCardEditor extends AiksControlBase {
+  setConfig(config) {
+    this._config = {
+      ...config,
+      entities: Array.isArray(config?.entities) ? [...config.entities] : []
+    };
+    this.render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    // 首次渲染时才加载图片和其他资源
+    if (this.firstRender) {
+      this.render();
+      this.firstRender = false;  // 标记首次渲染已完成
+    }
+  }
+
+  render() {
+    if (!this._config || !this._hass) return;
+    this.innerHTML = '';
+
+    const container = document.createElement('div');
+    container.style.padding = '16px';
+
+    const entityContainer = document.createElement('div');
+    entityContainer.id = 'entityContainer';
+    entityContainer.style.minHeight = '100px';
+
+    this._config.entities.forEach((entity, index) => {
+      const entityWrapper = this._createEntityRow(index, entity);
+      entityContainer.appendChild(entityWrapper);
+    });
+
+    const addButton = this._createButton(this._language === 'zh' ? '添加主机设备' : 'Add Host Device', () => {
+      this._config.entities.push({ entity_id: '' });
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+      this.render();
+    });
+    container.appendChild(entityContainer);
+    container.appendChild(addButton);
+
+    this.appendChild(container);
+    this._setupDragAndDrop(entityContainer);
+  }
+
+  _createEntityRow(index, entity) {
+    const entityWrapper = document.createElement('div');
+    entityWrapper.style.marginBottom = '10px';
+    entityWrapper.style.display = 'flex';
+    entityWrapper.style.alignItems = 'center';
+    entityWrapper.draggable = true;
+    entityWrapper.dataset.index = index;
+    entityWrapper.style.cursor = 'move';
+
+    const entityLabel = document.createElement('span');
+    entityLabel.innerText = this._translations[this._language].selectEntity + ': ';
+    entityLabel.style.width = '100px';
+    entityWrapper.appendChild(entityLabel);
+
+    const entitySelect = document.createElement('select');
+    entitySelect.style.width = '250px';
+    entitySelect.innerHTML = `<option value="">${this._translations[this._language].selectEntity}</option>`;
+    Object.keys(this._hass.states).forEach(entityId => {
+      if (entityId.startsWith('remote.')) {
+        const option = document.createElement('option');
+        option.value = entityId;
+        const friendlyName = this._hass.states[entityId]?.attributes?.friendly_name || entityId;
+        option.text = `${friendlyName} (${entityId})`;
+        if (entityId === entity.entity_id) option.selected = true;
+        entitySelect.appendChild(option);
+      }
+    });
+    entitySelect.addEventListener('change', () => {
+      const newEntities = [...this._config.entities];
+      newEntities[index] = { ...newEntities[index], entity_id: entitySelect.value };
+      this._config = { ...this._config, entities: newEntities };
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+      this.render();
+    });
+    entityWrapper.appendChild(entitySelect);
+
+    const deleteButton = this._createButton(this._language === 'zh' ? '删除' : 'Delete', () => {
+      const newEntities = [...this._config.entities];
+      newEntities.splice(index, 1);
+      this._config = { ...this._config, entities: newEntities };
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+      this.render();
+    });
+    entityWrapper.appendChild(deleteButton);
+
+    return entityWrapper;
+  }
+
+  _setupDragAndDrop(container) {
+    let draggedIndex = null;
+
+    container.addEventListener('dragstart', (e) => {
+      const target = e.target;
+      if (target.draggable) {
+        draggedIndex = parseInt(target.dataset.index);
+        e.dataTransfer.setData('text/plain', draggedIndex);
+        target.style.opacity = '0.5';
+      }
+    });
+
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+
+    container.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (draggedIndex !== null) {
+        const targetIndex = parseInt(e.target.dataset.index);
+        if (!isNaN(targetIndex) && draggedIndex !== targetIndex) {
+          const newEntities = [...this._config.entities];
+          const [movedEntity] = newEntities.splice(draggedIndex, 1);
+          newEntities.splice(targetIndex, 0, movedEntity);
+          this._config = { ...this._config, entities: newEntities };
+          this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+          this.render();
+        }
+        draggedIndex = null;
+        const draggables = container.querySelectorAll('[draggable]');
+        draggables.forEach(item => item.style.opacity = '1');
+      }
+    });
+
+    container.addEventListener('dragend', (e) => {
+      if (draggedIndex !== null) {
+        const draggables = container.querySelectorAll('[draggable]');
+        draggables.forEach(item => item.style.opacity = '1');
+      }
+    });
+  }
+}
 
 // 注册自定义卡片
 customElements.define('aiks-tv-card', AiksTvCard);
@@ -2412,6 +2606,9 @@ customElements.define('aiks-switch-card', AiksSwitchCard);
 customElements.define('aiks-switch-card-editor', AiksSwitchCardEditor);
 customElements.define('aiks-weather-card', AiksWeatherCard);
 customElements.define('aiks-weather-card-editor', AiksWeatherCardEditor);
+// 注册自定义卡片 - 添加到文件末尾的注册部分
+customElements.define('aiks-host-card', AiksHostCard);
+customElements.define('aiks-host-card-editor', AiksHostCardEditor);
 
 window.customCards = window.customCards || [];
 window.customCards.push(
@@ -2468,7 +2665,14 @@ window.customCards.push(
   name: navigator.language.startsWith('zh') ? '天气(ROS)1' : 'Weather(ROS)',
   description: navigator.language.startsWith('zh') ? '可以记录多个天气实体' : 'Multiple weather entities can be recorded',
   preview: true // 启用预览
-  }
+  },
+  {
+  type: 'aiks-host-card',
+  name: navigator.language.startsWith('zh') ? '主机(ROS)' : 'Host(ROS)',
+  description: navigator.language.startsWith('zh') ? '可以记录多个主机Remote设备' : 'Multiple host remote devices can be recorded',
+  preview: true // 启用预览
+ }
 
 );
+
 
