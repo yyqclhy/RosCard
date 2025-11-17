@@ -1,3 +1,5 @@
+import { AiksControlBase } from '../../base/AiksControlBase.js';
+
 export class AiksMediaPlayerCardEditor extends AiksControlBase {
   setConfig(config) {
     this._config = config || {};
