@@ -70,7 +70,7 @@ export class AiksFanCard extends AiksControlBase {
           
           wrapper.innerHTML = `<div style="margin-bottom: 8px;"><strong>${entity.entity_id}</strong> - ${stateText}</div>`;
 
-          // 开关按钮
+          // 开关按钮1
           const toggleBtn = this._createButton(
             state?.state === 'on' ? 'Off' : 'On',
             () => {
