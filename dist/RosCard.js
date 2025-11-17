@@ -335,15 +335,14 @@ class AiksTvCard extends AiksControlBase {
         });
         tvTypeSelect.addEventListener('change', () => {
           this._config.tv_type = tvTypeSelect.value;
-          if (tvTypeSelect.value === 'android_tv') this._config.media_play_entity = '';
           this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
           this.render();
         });
         tvTypeWrapper.appendChild(tvTypeSelect);
         container.appendChild(tvTypeWrapper);
 
-        // Apple TV 专用 media_player 选择
-        if (this._config.tv_type === 'apple_tv') {
+        // media_player 选择
+        if (this._config.tv_type === 'apple_tv' || this._config.tv_type === 'android_tv') {
           const mediaWrapper = document.createElement('div');
           mediaWrapper.style.marginBottom = '10px';
           mediaWrapper.style.display = 'flex';
@@ -2674,5 +2673,6 @@ window.customCards.push(
  }
 
 );
+
 
 
