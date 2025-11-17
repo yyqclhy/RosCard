@@ -1,0 +1,18 @@
+{
+  "name": "aiks-custom-cards",
+  "version": "1.1.0",
+  "description": "Aiks Custom Cards for Home Assistant",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "webpack --config webpack.config.js --mode production",
+    "dev": "webpack --config webpack.config.js --mode development --watch",
+    "clean": "rm -rf dist/*.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "babel-loader": "^9.1.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.0"
+  }
+}
