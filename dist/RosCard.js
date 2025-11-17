@@ -1,7 +1,7 @@
 class AiksControlBase extends HTMLElement {
   constructor() {
     super();
-    this.firstRender = true;  // 新增标志，表示是否是首次渲染
+    this.firstRender = true;  // 新增标志，表示是否是首次渲染1
     this._language = navigator.language.startsWith('zh') ? 'zh' : 'en';
     this._translations = {
       zh: {
