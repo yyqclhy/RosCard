@@ -1,7 +1,0 @@
-node_modules/
-/src/**
-package-lock.json
-package.json
-webpack.config.js
-.babelrc
-dist\RosCard.js.map
