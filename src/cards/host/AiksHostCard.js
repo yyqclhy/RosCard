@@ -1,82 +1,55 @@
 import { AiksControlBase } from '../../base/AiksControlBase.js';
 
 export class AiksHostCard extends AiksControlBase {
-  constructor() {
-    super();
-    this.addEventListener('config-changed', (e) => {
-      this.setConfig(e.detail.config);
-    });
-  }
-
   setConfig(config) {
     this._config = {
       ...config,
-      host_name: config.host_name || (this._language === 'zh' ? '未命名主机' : 'Unnamed Host'),
       entities: Array.isArray(config?.entities) ? [...config.entities] : [],
-      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_host.png',
+      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_host.png' // 自定义图标路径
     };
     if (this._hass) this.render();
   }
 
   set hass(hass) {
     this._hass = hass;
+    // 首次渲染时才加载图片和其他资源
     if (this.firstRender) {
       if (this._config) this.render();
-      this.firstRender = false;
+      this.firstRender = false;  // 标记首次渲染已完成
     }
   }
 
   render() {
-    if (!this._hass) return;
-
+    if (!this._hass || !this._config) return;
     this.innerHTML = '';
+
     const card = document.createElement('ha-card');
-    card.header = this._translations[this._language].cardTitle(this._config.host_name);
+    card.header = this._translations[this._language].cardTitle(this._language === 'zh' ? '主机控制' : 'Host Control');
+
+    // 添加图片
     card.appendChild(this._createIcon(this._config.icon_path));
 
-    const controlPanel = document.createElement('div');
-    controlPanel.style.padding = '16px';
-    controlPanel.style.position = 'relative';
-    controlPanel.innerHTML = `<h3>${this._translations[this._language].controlPanelTitle}</h3>`;
+    const content = document.createElement('div');
+    content.style.padding = '16px';
+    content.style.position = 'relative';
 
-    if (Array.isArray(this._config.entities) && this._config.entities.length > 0) {
-      this._config.entities.forEach((entity) => {
-        if (entity.entity_id && entity.entity_id.startsWith('remote.')) {
-          const state = this._hass.states[entity.entity_id];
-          const wrapper = document.createElement('div');
-          wrapper.style.marginBottom = '12px';
-          wrapper.style.padding = '8px';
-          wrapper.style.border = '1px solid #ddd';
-          wrapper.style.borderRadius = '4px';
-
-          wrapper.innerHTML = `<div style="margin-bottom: 8px;"><strong>${entity.entity_id}</strong></div>`;
-
-          // 主机命令按钮
-          const commands = entity.commands || [];
-          commands.forEach((cmd) => {
-            const cmdBtn = this._createButton(cmd.label || cmd, () => {
-              this._hass.callService('remote', 'send_command', {
-                entity_id: entity.entity_id,
-                command: cmd.value || cmd
-              });
-            });
-            wrapper.appendChild(cmdBtn);
-          });
-
-          controlPanel.appendChild(wrapper);
-        }
+    if (this._config.entities.length > 0) {
+      this._config.entities.forEach(entity => {
+        const friendlyName = this._hass.states[entity.entity_id]?.attributes?.friendly_name || entity.entity_id;
+        const entityDiv = document.createElement('div');
+        entityDiv.style.marginBottom = '10px';
+        entityDiv.innerHTML = `<div>${this._translations[this._language].entity}: ${friendlyName}</div>`;
+        content.appendChild(entityDiv);
       });
+    } else {
+      content.innerHTML = `<div>${this._translations[this._language].validEntity}</div>`;
     }
 
-    card.appendChild(controlPanel);
+    card.appendChild(content);
     this.appendChild(card);
   }
 
-  getCardSize() {
-    return 4;
-  }
-
-    static async getConfigElement() {
+  static async getConfigElement() {
     return document.createElement('aiks-host-card-editor');
   }
 

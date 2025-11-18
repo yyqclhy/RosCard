@@ -1,90 +1,60 @@
 import { AiksControlBase } from '../../base/AiksControlBase.js';
 
 export class AiksMediaPlayerCard extends AiksControlBase {
-  constructor() {
-    super();
-    this.addEventListener('config-changed', (e) => {
-      this.setConfig(e.detail.config);
-    });
-  }
-
   setConfig(config) {
     this._config = {
       ...config,
-      media_name: config.media_name || (this._language === 'zh' ? '未命名播放器' : 'Unnamed Player'),
       entities: Array.isArray(config?.entities) ? [...config.entities] : [],
-      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_media_play1.png',
+      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_media_play1.png' // 自定义图标路径
     };
     if (this._hass) this.render();
   }
 
   set hass(hass) {
     this._hass = hass;
+        // 首次渲染时才加载图片和其他资源
     if (this.firstRender) {
-      if (this._config) this.render();
-      this.firstRender = false;
+          if (this._config) this.render();
+
+      this.firstRender = false;  // 标记首次渲染已完成
     }
   }
 
   render() {
-    if (!this._hass) return;
-
+    if (!this._hass || !this._config) return;
     this.innerHTML = '';
+
     const card = document.createElement('ha-card');
-    card.header = this._translations[this._language].cardTitle(this._config.media_name);
+    card.header = this._translations[this._language].cardTitle(this._language === 'zh' ? '媒体播放器控制' : 'Media Player Control');
+
+    // 添加图片
     card.appendChild(this._createIcon(this._config.icon_path));
 
-    const controlPanel = document.createElement('div');
-    controlPanel.style.padding = '16px';
-    controlPanel.style.position = 'relative';
-    controlPanel.innerHTML = `<h3>${this._translations[this._language].controlPanelTitle}</h3>`;
+    const content = document.createElement('div');
+    content.style.padding = '16px';
+    content.style.position = 'relative';
 
-    if (Array.isArray(this._config.entities) && this._config.entities.length > 0) {
-      this._config.entities.forEach((entity) => {
-        if (entity.entity_id && entity.entity_id.startsWith('media_player.')) {
-          const state = this._hass.states[entity.entity_id];
-          const wrapper = document.createElement('div');
-          wrapper.style.marginBottom = '12px';
-          wrapper.style.padding = '8px';
-          wrapper.style.border = '1px solid #ddd';
-          wrapper.style.borderRadius = '4px';
-
-          wrapper.innerHTML = `<div style="margin-bottom: 8px;"><strong>${entity.entity_id}</strong> - ${state?.state || 'unknown'}</div>`;
-
-          const playBtn = this._createButton('Play', () => {
-            this._hass.callService('media_player', 'media_play', { entity_id: entity.entity_id });
-          });
-
-          const pauseBtn = this._createButton('Pause', () => {
-            this._hass.callService('media_player', 'media_pause', { entity_id: entity.entity_id });
-          });
-
-          const stopBtn = this._createButton('Stop', () => {
-            this._hass.callService('media_player', 'media_stop', { entity_id: entity.entity_id });
-          });
-
-          wrapper.appendChild(playBtn);
-          wrapper.appendChild(pauseBtn);
-          wrapper.appendChild(stopBtn);
-          controlPanel.appendChild(wrapper);
-        }
+    if (this._config.entities.length > 0) {
+      this._config.entities.forEach(entity => {
+        const friendlyName = this._hass.states[entity.entity_id]?.attributes?.friendly_name || entity.entity_id;
+        const entityDiv = document.createElement('div');
+        entityDiv.style.marginBottom = '10px';
+        entityDiv.innerHTML = `<div>${this._translations[this._language].entity}: ${friendlyName}</div>`;
+        content.appendChild(entityDiv);
       });
+    } else {
+      content.innerHTML = `<div>${this._translations[this._language].validEntity}</div>`;
     }
 
-    card.appendChild(controlPanel);
+    card.appendChild(content);
     this.appendChild(card);
   }
 
-  getCardSize() {
-    return 4;
-  }
-
-    static async getConfigElement() {
+  static async getConfigElement() {
     return document.createElement('aiks-media-player-card-editor');
   }
 
   static getStubConfig() {
     return { entities: [] };
   }
-
 }
