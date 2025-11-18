@@ -72,4 +72,12 @@ export class AiksSwitchCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement() {
+    return document.createElement('aiks-switch-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
 }

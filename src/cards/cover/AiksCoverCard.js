@@ -98,4 +98,13 @@ export class AiksCoverCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+  static async getConfigElement() {
+    return document.createElement('aiks-cover-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
+
 }

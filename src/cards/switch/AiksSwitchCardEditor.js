@@ -140,11 +140,5 @@ export class AiksSwitchCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-switch-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }

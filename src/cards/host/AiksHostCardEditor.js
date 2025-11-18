@@ -140,11 +140,5 @@ export class AiksHostCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-host-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }

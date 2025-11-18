@@ -140,11 +140,5 @@ export class AiksFanCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-fan-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }

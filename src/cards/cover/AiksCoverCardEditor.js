@@ -140,11 +140,5 @@ export class AiksCoverCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-cover-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }

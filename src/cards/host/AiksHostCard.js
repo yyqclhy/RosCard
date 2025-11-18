@@ -75,4 +75,12 @@ export class AiksHostCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement() {
+    return document.createElement('aiks-host-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
 }

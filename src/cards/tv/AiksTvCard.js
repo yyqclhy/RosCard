@@ -100,4 +100,20 @@ export class AiksTvCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement(){
+    return document.createElement('aiks-tv-card-editor');
+  }
+
+  static getStubConfig(){
+    const language = navigator.language.startsWith('zh') ? 'zh' : 'en';
+    return {
+      type:'custom:aiks-tv-card',
+      id:'',
+      tv_type:'android_tv',
+      tv_name:language==='zh'?'未命名电视':'Unnamed TV',
+      media_play_entity:'',
+      entities:[]
+    };
+  }
 }

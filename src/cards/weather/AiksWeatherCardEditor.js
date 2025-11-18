@@ -140,11 +140,5 @@ export class AiksWeatherCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-weather-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }

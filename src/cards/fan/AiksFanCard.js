@@ -124,4 +124,12 @@ export class AiksFanCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement() {
+    return document.createElement('aiks-fan-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
 }

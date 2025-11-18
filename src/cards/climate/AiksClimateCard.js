@@ -96,4 +96,12 @@ export class AiksClimateCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement() {
+    return document.createElement('aiks-climate-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
 }

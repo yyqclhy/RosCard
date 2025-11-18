@@ -74,4 +74,12 @@ export class AiksWeatherCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement() {
+    return document.createElement('aiks-weather-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
 }

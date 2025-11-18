@@ -139,12 +139,5 @@ export class AiksClimateCardEditor extends AiksControlBase {
       }
     });
   }
-
-  static async getConfigElement() {
-    return document.createElement('aiks-climate-card-editor');
-  }
-
-  static getStubConfig() {
-    return { entities: [] };
-  }
+  
 }

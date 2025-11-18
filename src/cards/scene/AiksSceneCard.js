@@ -66,4 +66,12 @@ export class AiksSceneCard extends AiksControlBase {
   getCardSize() {
     return 4;
   }
+
+    static async getConfigElement() {
+    return document.createElement('aiks-scene-card-editor');
+  }
+
+  static getStubConfig() {
+    return { entities: [] };
+  }
 }

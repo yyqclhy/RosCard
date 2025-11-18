@@ -173,11 +173,5 @@ export class AiksLightCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-light-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }

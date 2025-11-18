@@ -140,11 +140,5 @@ export class AiksMediaPlayerCardEditor extends AiksControlBase {
     });
   }
 
-  static async getConfigElement() {
-    return document.createElement('aiks-media-player-card-editor');
-  }
 
-  static getStubConfig() {
-    return { entities: [] };
-  }
 }
