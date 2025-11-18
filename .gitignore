@@ -1,5 +1,6 @@
 node_modules/
 /src/**
+/src/cards/**
 package-lock.json
 package.json
 webpack.config.js
