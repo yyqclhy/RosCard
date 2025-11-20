@@ -41,6 +41,15 @@ import { AiksWeatherCardEditor } from './cards/weather/AiksWeatherCardEditor.js'
 import { AiksHostCard } from './cards/host/AiksHostCard.js';
 import { AiksHostCardEditor } from './cards/host/AiksHostCardEditor.js';
 
+// ========== 导入灯监听卡片 ==========
+// import { AiksLightMonitorCard} from './cards/light-monitor/AiksLightMonitorCard.js';
+// import { AiksLightMonitorCardEditor } from './cards/light-monitor/AiksLightMonitorCardEditor.js';
+
+// ========== 导入开关监听卡片 ==========
+import { AiksSwitchMonitorCard } from './cards/switch-monitor/AiksSwitchMonitorCard.js';
+import { AiksSwitchMonitorCardEditor } from './cards/switch-monitor/AiksSwitchMonitorCardEditor.js';
+
+
 // ========== 注册所有卡片 ==========
 customElements.define('aiks-tv-card', AiksTvCard);
 customElements.define('aiks-tv-card-editor', AiksTvCardEditor);
@@ -71,6 +80,13 @@ customElements.define('aiks-weather-card-editor', AiksWeatherCardEditor);
 
 customElements.define('aiks-host-card', AiksHostCard);
 customElements.define('aiks-host-card-editor', AiksHostCardEditor);
+
+// customElements.define('aiks-light-monitor-card', AiksLightMonitorCard);
+// customElements.define('aiks-light-monitor-card-editor',  AiksLightMonitorCardEditor);
+
+customElements.define('aiks-switch-monitor-card', AiksSwitchMonitorCard);
+customElements.define('aiks-switch-monitor-card-editor', AiksSwitchMonitorCardEditor);
+
 
 // ========== 向Home Assistant注册卡片 ==========
 window.customCards = window.customCards || [];
@@ -134,7 +150,22 @@ window.customCards.push(
     name: navigator.language.startsWith('zh') ? '主机(ROS)' : 'Host(ROS)',
     description: navigator.language.startsWith('zh') ? '主机卡片' : 'Host Card',
     preview: true
+  },
+
+  //   {
+  //   type: 'aiks-light-monitor-card',
+  //   name: navigator.language.startsWith('zh') ? '灯监听(ROS)' : 'Light Monitor(ROS)',
+  //   description: navigator.language.startsWith('zh') ? '灯监听卡片' : 'Light Monitor Card',
+  //   preview: true
+  // }
+
+  {
+    type: 'aiks-switch-monitor-card',
+    name: navigator.language.startsWith('zh') ? '开关监听(ROS)' : 'Switch Monitor(ROS)',
+    description: navigator.language.startsWith('zh') ? '开关监听卡片' : 'Switch Monitor Card',
+    preview: true
   }
+
 );
 
 console.log('✅ Aiks Custom Cards loaded successfully!');
