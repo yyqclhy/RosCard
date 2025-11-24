@@ -161,8 +161,8 @@ window.customCards.push(
 
   {
     type: 'aiks-switch-monitor-card',
-    name: navigator.language.startsWith('zh') ? '开关监听(ROS)' : 'Switch Monitor(ROS)',
-    description: navigator.language.startsWith('zh') ? '开关监听卡片' : 'Switch Monitor Card',
+    name: navigator.language.startsWith('zh') ? '统计(ROS)' : 'Statistics(ROS)',
+    description: navigator.language.startsWith('zh') ? '统计卡片' : 'Statistics Card',
     preview: true
   }
 
