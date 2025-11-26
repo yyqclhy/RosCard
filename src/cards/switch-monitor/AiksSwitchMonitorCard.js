@@ -10,7 +10,7 @@ export class AiksSwitchMonitorCard extends AiksControlBase {
     this._config = {
       ...config,
       id: config.id || this.generateUUID(),
-
+      icon_path: config.icon_path || '/local/community/RosCard/icon_img/icon_statistics.png', // 自定义图标路径 
       device_types: {
         light: true,
         switch: true,
@@ -57,6 +57,9 @@ export class AiksSwitchMonitorCard extends AiksControlBase {
     const card = document.createElement('ha-card');
     card.header = this._translations[this._language].cardTitle(this._language === 'zh' ? '统计' : 'Statistics');
 
+        // 添加图片
+    card.appendChild(this._createIcon(this._config.icon_path));
+
     const content = document.createElement('div');
     content.style.padding = '16px';
 
@@ -68,6 +71,7 @@ export class AiksSwitchMonitorCard extends AiksControlBase {
     typeBox.style.borderRadius = '8px';
     typeBox.style.color = '#1565c0';
     typeBox.style.fontSize = '0.95em';
+    typeBox.style.display = 'inline-block'; 
     typeBox.textContent = this.getEnabledTypesText();
     content.appendChild(typeBox);
 

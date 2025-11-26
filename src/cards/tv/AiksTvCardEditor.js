@@ -4,13 +4,13 @@ export class AiksTvCardEditor extends AiksControlBase {
   static REMOTE_DEFAULTS = {
     android_tv: {
       POWER:'POWER', UP:'UP', DOWN:'DOWN', LEFT:'LEFT', RIGHT:'RIGHT',
-      ENTER:'ENTER', BACK:'BACK', PLAY:'PLAY', PAUSE:'PAUSE',
+      CENTER:'CENTER' ,ENTER:'ENTER', BACK:'BACK', PLAY:'PLAY', PAUSE:'PAUSE',
       VOLUME_UP:'VOLUME_UP', VOLUME_DOWN:'VOLUME_DOWN',
       MUTE:'MUTE', UN_MUTE:'UNMUTE', SETTINGS:'SETTINGS', HOME:'HOME', MENU:'MENU'
     },
     apple_tv: {
       POWER:'suspend', UP:'up', DOWN:'down', LEFT:'left', RIGHT:'right',
-      ENTER:'select', BACK:'menu', PLAY:'play', PAUSE:'pause',
+      CENTER:'select', BACK:'menu', PLAY:'play', PAUSE:'pause',
       VOLUME_UP:'volume_up', VOLUME_DOWN:'volume_down',
       MUTE:'mute', UN_MUTE:'', SETTINGS:'wakeup', HOME:'home', MENU:'menu'
     }
@@ -174,8 +174,43 @@ export class AiksTvCardEditor extends AiksControlBase {
     // 实体列表
     const entityContainer = document.createElement('div');
     entityContainer.id = 'entityContainer';
-    const predefinedKeys = ['POWER','UP','DOWN','LEFT','RIGHT','ENTER','BACK','PLAY','PAUSE','VOLUME_UP','VOLUME_DOWN','MUTE','UN_MUTE','SETTINGS','HOME','MENU'];
-    this._config.entities = predefinedKeys.map((k,i)=>this._config.entities[i]||{key:k,type:'',entity_id:'',value:''});
+    // 基础按键（两种 TV 都有）
+    const baseKeys = [
+      'POWER','UP','DOWN','LEFT','RIGHT','CENTER','BACK','PLAY',
+      'PAUSE','VOLUME_UP','VOLUME_DOWN','MUTE','UN_MUTE','SETTINGS','HOME','MENU'
+    ];
+
+    // 只给 Android TV 用的数字 & 删除键
+    const numericKeys = [
+      'NUM_0','NUM_1','NUM_2','NUM_3','NUM_4',
+      'NUM_5','NUM_6','NUM_7','NUM_8','NUM_9',
+      'DELETE'
+    ];
+
+    // 只有 android_tv 才显示数字 & 删除
+    const useNumeric = this._config.tv_type === 'android_tv';
+    const predefinedKeys = useNumeric ? [...baseKeys, ...numericKeys] : baseKeys;
+
+        // 2. 先把旧的 entities 按 key 存起来
+    const prevByKey = {};
+    (this._config.entities || []).forEach(e => {
+      if (e && e.key) {
+        prevByKey[e.key] = e;
+      }
+    });
+
+    // 3. 用“当前的 predefinedKeys”重建 entities
+    this._config.entities = predefinedKeys.map(k => {
+      const old = prevByKey[k];
+      if (old) {
+        // 保留旧的绑定（entity_id / type / value），但 key 用最新的
+        return { ...old, key: k };
+      }
+      // 新 key：生成一个默认空配置
+      return { key: k, type: '', entity_id: '', value: '' };
+    });
+
+    // 4. 渲染行
     this._config.entities.forEach((cfg,idx)=>{
       entityContainer.appendChild(this._createEntityRow(idx,cfg,this._hass));
     });
@@ -316,7 +351,7 @@ export class AiksTvCardEditor extends AiksControlBase {
 
         inp.style.width = '200px';
         inp.placeholder = this._translations[this._language].enterCommand;
-        inp.addEventListener('input', () => updateRow({ value: inp.value }));
+        inp.addEventListener('blur', () => updateRow({ value: inp.value }));
         compContainer.appendChild(inp);
 
         const resetBtn = this._createButton(
