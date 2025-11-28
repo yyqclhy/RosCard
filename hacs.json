@@ -1,7 +1,17 @@
 {
-  "name": "Aiks Custom Card",
-  "content_in_root": true,
-  "filename": "RosCard.js",  
+  "name": "RosCard",
+  "content_in_root": false,
   "render_readme": true,
-  "version": "1.0.0", 
-  "homeassistant": "2023.7.0"
+  "filename": "dist/RosCard.js",
+  "homeassistant": "2023.7.0",
+  "persistent_directory": "dist",
+  "author": {
+    "name": "yyqclhy",
+    "url": "https://github.com/yyqclhy"
+  },
+  "description": "一个美观的Home Assistant自定义卡片，支持多种智能家居设备的控制。",
+  "version": "1.0.4",
+  "domain": "roscard",
+  "documentation": "https://github.com/yyqclhy/RosCard#readme",
+  "issue_tracker": "https://github.com/yyqclhy/RosCard/issues",
+}
