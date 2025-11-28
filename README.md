@@ -4,18 +4,7 @@
 
 ![AIKS X9 Vela Edition](https://img.shields.io/badge/AIKS-X9%20Vela%20Edition-orange) ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Custom%20Card-blue) ![Version](https://img.shields.io/github/release/yyqclhy/RosCard?style=flat&logo=github&label=Version) ![Downloads](https://img.shields.io/github/downloads/yyqclhy/RosCard/total?logo=github) ![License](https://img.shields.io/github/license/yyqclhy/RosCard)
 
-## 🖼️ 卡片预览
 
-### 📺 设备图标展示
-以下是RosCard支持的主要设备类型图标：
-
-| 设备类型 | 图标预览 | 设备类型 | 图标预览 |
-|---------|---------|---------|---------|
-| 电视/媒体 | ![TV Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_tv.png) | 空调温控 | ![Climate Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_climate.png) |
-| 智能灯光 | ![Light Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_light.png) | 智能开关 | ![Switch Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_switch.png) |
-| 场景控制 | ![Scene Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_scene.png) | 风扇设备 | ![Fan Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_fan.png) |
-| 窗帘控制 | ![Cover Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_cover.png) | 统计数据 | ![Statistics Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_statistics.png) |
-| 主机设备 | ![Host Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_host.png) | 天气信息 | ![Weather Icon](https://raw.githubusercontent.com/yyqclhy/RosCard/main/dist/icon_img/icon_weather.png) |
 
 ### 🎮 AIKS X9 Vela 专用界面
 - **遥控器优化**：界面专为AIKS X9 Vela遥控器的操作习惯设计
