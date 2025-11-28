@@ -5,10 +5,7 @@
   "filename": "dist/RosCard.js",
   "homeassistant": "2023.7.0",
   "persistent_directory": "dist",
-  "author": {
-    "name": "yyqclhy",
-    "url": "https://github.com/yyqclhy"
-  },
+  "author": "yyqclhy",
   "description": "一个美观的Home Assistant自定义卡片，支持多种智能家居设备的控制。",
   "version": "1.0.4",
   "domain": "roscard",
