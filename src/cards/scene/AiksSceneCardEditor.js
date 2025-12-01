@@ -6,6 +6,12 @@ export class AiksSceneCardEditor extends AiksControlBase {
       ...config,
       entities: Array.isArray(config?.entities) ? [...config.entities] : []
     };
+
+    // ✅ 为每个实体补充默认值：mode（执行方式）
+    this._config.entities = this._config.entities.map(e => ({
+      ...e,
+      mode: e.mode || 'immediate'
+    }));
     this.render();
   }
 
@@ -30,23 +36,45 @@ export class AiksSceneCardEditor extends AiksControlBase {
 
     this._config.entities.forEach((entity, index) => {
       const entityWrapper = this._createEntityRow(index, entity);
+
+      const modeSelect = document.createElement('select');
+      modeSelect.style.marginLeft = '10px';
+      modeSelect.style.width = '150px';
+
+      ['immediate', 'delayed', 'popup'].forEach((modeOption) => {
+        const option = document.createElement('option');
+        option.value = modeOption;
+        option.text = this._translations[this._language].executionModes[modeOption];
+
+        if ((entity.mode || 'immediate') === modeOption) {
+          option.selected = true;
+        }
+        modeSelect.appendChild(option);
+      });
+
+      modeSelect.addEventListener('change', () => {
+        const newEntities = [...this._config.entities];
+        newEntities[index] = {
+          ...newEntities[index],
+          mode: modeSelect.value
+        };
+        this._config = { ...this._config, entities: newEntities };
+        this.dispatchEvent(new CustomEvent('config-changed', {
+          detail: { config: { ...this._config } }
+        }));
+      });
       entityContainer.appendChild(entityWrapper);
     });
 
     const addButton = this._createButton(this._language === 'zh' ? '添加场景' : 'Add Scene', () => {
       this._config.entities.push({ entity_id: '' });
-      this.dispatchEvent(new CustomEvent('config-changed', {
-          detail: { config: this._config },
-          bubbles: true,
-          composed: true
-        }));
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
       this.render();
     });
     container.appendChild(entityContainer);
     container.appendChild(addButton);
 
     this.appendChild(container);
-
     this._setupDragAndDrop(entityContainer);
   }
 
@@ -65,7 +93,7 @@ export class AiksSceneCardEditor extends AiksControlBase {
     entityWrapper.appendChild(entityLabel);
 
     const entitySelect = document.createElement('select');
-    entitySelect.style.width = '250px';
+    entitySelect.style.width = '200px';
     entitySelect.innerHTML = `<option value="">${this._translations[this._language].selectEntity}</option>`;
     Object.keys(this._hass.states).forEach(entityId => {
       if (entityId.startsWith('scene.')) {
@@ -85,6 +113,33 @@ export class AiksSceneCardEditor extends AiksControlBase {
       this.render();
     });
     entityWrapper.appendChild(entitySelect);
+
+    // ✅ 执行方式选择框
+    const modeSelect = document.createElement('select');
+    modeSelect.style.marginLeft = '10px';
+    modeSelect.style.width = '100px';
+
+    ['immediate', 'delayed', 'popup'].forEach((modeOption) => {
+      const option = document.createElement('option');
+      option.value = modeOption;
+      option.text = this._language === 'zh'
+        ? (modeOption === 'immediate' ? '立即执行' :
+           modeOption === 'delayed' ? '延迟执行' : '弹窗询问')
+        : (modeOption === 'immediate' ? 'Immediate' :
+           modeOption === 'delayed' ? 'Delayed' : 'Popup Ask');
+      if ((entity.mode || 'immediate') === modeOption) {
+        option.selected = true;
+      }
+      modeSelect.appendChild(option);
+    });
+
+    modeSelect.addEventListener('change', () => {
+      const newEntities = [...this._config.entities];
+      newEntities[index] = { ...newEntities[index], mode: modeSelect.value };
+      this._config = { ...this._config, entities: newEntities };
+      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
+    });
+    entityWrapper.appendChild(modeSelect);
 
     const deleteButton = this._createButton(this._language === 'zh' ? '删除' : 'Delete', () => {
       const newEntities = [...this._config.entities];
@@ -139,6 +194,4 @@ export class AiksSceneCardEditor extends AiksControlBase {
       }
     });
   }
-
-
 }
