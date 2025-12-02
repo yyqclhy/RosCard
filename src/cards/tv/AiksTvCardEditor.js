@@ -9,7 +9,7 @@ export class AiksTvCardEditor extends AiksControlBase {
       MUTE:'MUTE', UN_MUTE:'UNMUTE', SETTINGS:'SETTINGS', HOME:'HOME', MENU:'MENU'
     },
     apple_tv: {
-      POWER:'suspend', UP:'up', DOWN:'down', LEFT:'left', RIGHT:'right',
+      POWER_ON:'wakeup' , POWER_OFF:'suspend', UP:'up', DOWN:'down', LEFT:'left', RIGHT:'right',
       CENTER:'select', BACK:'menu', PLAY:'play', PAUSE:'pause',
       VOLUME_UP:'volume_up', VOLUME_DOWN:'volume_down',
       MUTE:'mute', UN_MUTE:'', SETTINGS:'wakeup', HOME:'home', MENU:'menu'
@@ -23,6 +23,8 @@ export class AiksTvCardEditor extends AiksControlBase {
       zh: {
         ...this._translations.zh,
         mediaCommands: [
+          { label: '打开', value: 'turn_on' },
+          { label: '关闭', value: 'turn_off' },
           { label: '播放', value: 'media_play' },
           { label: '暂停', value: 'media_pause' },
           { label: '音量增加', value: 'volume_up' },
@@ -34,6 +36,8 @@ export class AiksTvCardEditor extends AiksControlBase {
       en: {
         ...this._translations.en,
         mediaCommands: [
+          { label: 'Turn on', value: 'turn_on' },
+          { label: 'Turn off', value: 'turn_off' },
           { label: 'Play', value: 'media_play' },
           { label: 'Pause', value: 'media_pause' },
           { label: 'Volume Up', value: 'volume_up' },
@@ -176,10 +180,13 @@ export class AiksTvCardEditor extends AiksControlBase {
     entityContainer.id = 'entityContainer';
     // 基础按键（两种 TV 都有）
     const baseKeys = [
-      'POWER','UP','DOWN','LEFT','RIGHT','CENTER','BACK','PLAY',
+      'UP','DOWN','LEFT','RIGHT','CENTER','BACK','PLAY',
       'PAUSE','VOLUME_UP','VOLUME_DOWN','MUTE','UN_MUTE','SETTINGS','HOME','MENU'
     ];
 
+    //开关键区别
+    const android_tv = ['POWER'];
+    const apple_tv = ['POWER_ON','POWER_OFF'] ;
     // 只给 Android TV 用的数字 & 删除键
     const numericKeys = [
       'NUM_0','NUM_1','NUM_2','NUM_3','NUM_4',
@@ -189,7 +196,7 @@ export class AiksTvCardEditor extends AiksControlBase {
 
     // 只有 android_tv 才显示数字 & 删除
     const useNumeric = this._config.tv_type === 'android_tv';
-    const predefinedKeys = useNumeric ? [...baseKeys, ...numericKeys] : baseKeys;
+    const predefinedKeys = useNumeric ? [...android_tv , ...baseKeys, ...numericKeys] : [...apple_tv , ...baseKeys];
 
         // 2. 先把旧的 entities 按 key 存起来
     const prevByKey = {};
@@ -282,7 +289,7 @@ export class AiksTvCardEditor extends AiksControlBase {
       if (eid.startsWith('media_player.')||eid.startsWith('remote.')||eid.startsWith('select.')){
         const opt=document.createElement('option');
         opt.value=eid;
-        opt.text=(hass.states[eid]?.attributes?.friendly_name)||eid;
+        opt.text = `${hass.states[eid]?.attributes?.friendly_name || eid} (${eid})`;
         if(eid===config.entity_id) opt.selected=true;
         entitySelect.appendChild(opt);
       }
