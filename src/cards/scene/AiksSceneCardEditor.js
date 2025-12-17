@@ -1,197 +1,38 @@
-import { AiksControlBase } from '../../base/AiksControlBase.js';
+import { AiksUnifiedCardEditor } from '../../base/AiksUnifiedCardEditor.js';
 
-export class AiksSceneCardEditor extends AiksControlBase {
-  setConfig(config) {
-    this._config = {
-      ...config,
-      entities: Array.isArray(config?.entities) ? [...config.entities] : []
+export class AiksSceneCardEditor extends AiksUnifiedCardEditor {
+  getEntityDomain() {
+    return 'scene';
+  }
+
+  // 定义额外配置：dropdown 选择执行方式
+  getExtraConfig(entity) {
+    return {
+      mode: {
+        type: 'select',
+        label: this._language === 'zh' ? '执行方式' : 'Mode',
+        defaultValue: 'immediate',  // 新增：默认值由基类处理
+        options: [
+          { 
+            value: 'immediate', 
+            label: this._language === 'zh' ? '立即执行' : 'Immediate'
+          },
+          { 
+            value: 'delayed', 
+            label: this._language === 'zh' ? '延迟执行' : 'Delayed'
+          },
+          { 
+            value: 'popup', 
+            label: this._language === 'zh' ? '弹窗询问' : 'Popup Ask'
+          }
+        ]
+      }
     };
-
-    // ✅ 为每个实体补充默认值：mode（执行方式）
-    this._config.entities = this._config.entities.map(e => ({
-      ...e,
-      mode: e.mode || 'immediate'
-    }));
-    this.render();
   }
 
-  set hass(hass) {
-    this._hass = hass;
-    if (this.firstRender) {
-      this.render();
-      this.firstRender = false;
-    }
-  }
-
-  render() {
-    if (!this._config || !this._hass) return;
-    this.innerHTML = '';
-
-    const container = document.createElement('div');
-    container.style.padding = '16px';
-
-    const entityContainer = document.createElement('div');
-    entityContainer.id = 'entityContainer';
-    entityContainer.style.minHeight = '100px';
-
-    this._config.entities.forEach((entity, index) => {
-      const entityWrapper = this._createEntityRow(index, entity);
-
-      const modeSelect = document.createElement('select');
-      modeSelect.style.marginLeft = '10px';
-      modeSelect.style.width = '150px';
-
-      ['immediate', 'delayed', 'popup'].forEach((modeOption) => {
-        const option = document.createElement('option');
-        option.value = modeOption;
-        option.text = this._translations[this._language].executionModes[modeOption];
-
-        if ((entity.mode || 'immediate') === modeOption) {
-          option.selected = true;
-        }
-        modeSelect.appendChild(option);
-      });
-
-      modeSelect.addEventListener('change', () => {
-        const newEntities = [...this._config.entities];
-        newEntities[index] = {
-          ...newEntities[index],
-          mode: modeSelect.value
-        };
-        this._config = { ...this._config, entities: newEntities };
-        this.dispatchEvent(new CustomEvent('config-changed', {
-          detail: { config: { ...this._config } }
-        }));
-      });
-      entityContainer.appendChild(entityWrapper);
-    });
-
-    const addButton = this._createButton(this._language === 'zh' ? '添加场景' : 'Add Scene', () => {
-      this._config.entities.push({ entity_id: '' });
-      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
-      this.render();
-    });
-    container.appendChild(entityContainer);
-    container.appendChild(addButton);
-
-    this.appendChild(container);
-    this._setupDragAndDrop(entityContainer);
-  }
-
-  _createEntityRow(index, entity) {
-    const entityWrapper = document.createElement('div');
-    entityWrapper.style.marginBottom = '10px';
-    entityWrapper.style.display = 'flex';
-    entityWrapper.style.alignItems = 'center';
-    entityWrapper.draggable = true;
-    entityWrapper.dataset.index = index;
-    entityWrapper.style.cursor = 'move';
-
-    const entityLabel = document.createElement('span');
-    entityLabel.innerText = this._translations[this._language].selectEntity + ': ';
-    entityLabel.style.width = '100px';
-    entityWrapper.appendChild(entityLabel);
-
-    const entitySelect = document.createElement('select');
-    entitySelect.style.width = '200px';
-    entitySelect.innerHTML = `<option value="">${this._translations[this._language].selectEntity}</option>`;
-    Object.keys(this._hass.states).forEach(entityId => {
-      if (entityId.startsWith('scene.')) {
-        const option = document.createElement('option');
-        option.value = entityId;
-        const friendlyName = this._hass.states[entityId]?.attributes?.friendly_name || entityId;
-        option.text = `${friendlyName} (${entityId})`;
-        if (entityId === entity.entity_id) option.selected = true;
-        entitySelect.appendChild(option);
-      }
-    });
-    entitySelect.addEventListener('change', () => {
-      const newEntities = [...this._config.entities];
-      newEntities[index] = { ...newEntities[index], entity_id: entitySelect.value };
-      this._config = { ...this._config, entities: newEntities };
-      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
-      this.render();
-    });
-    entityWrapper.appendChild(entitySelect);
-
-    // ✅ 执行方式选择框
-    const modeSelect = document.createElement('select');
-    modeSelect.style.marginLeft = '10px';
-    modeSelect.style.width = '100px';
-
-    ['immediate', 'delayed', 'popup'].forEach((modeOption) => {
-      const option = document.createElement('option');
-      option.value = modeOption;
-      option.text = this._language === 'zh'
-        ? (modeOption === 'immediate' ? '立即执行' :
-           modeOption === 'delayed' ? '延迟执行' : '弹窗询问')
-        : (modeOption === 'immediate' ? 'Immediate' :
-           modeOption === 'delayed' ? 'Delayed' : 'Popup Ask');
-      if ((entity.mode || 'immediate') === modeOption) {
-        option.selected = true;
-      }
-      modeSelect.appendChild(option);
-    });
-
-    modeSelect.addEventListener('change', () => {
-      const newEntities = [...this._config.entities];
-      newEntities[index] = { ...newEntities[index], mode: modeSelect.value };
-      this._config = { ...this._config, entities: newEntities };
-      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
-    });
-    entityWrapper.appendChild(modeSelect);
-
-    const deleteButton = this._createButton(this._language === 'zh' ? '删除' : 'Delete', () => {
-      const newEntities = [...this._config.entities];
-      newEntities.splice(index, 1);
-      this._config = { ...this._config, entities: newEntities };
-      this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
-      this.render();
-    });
-    entityWrapper.appendChild(deleteButton);
-
-    return entityWrapper;
-  }
-
-  _setupDragAndDrop(container) {
-    let draggedIndex = null;
-
-    container.addEventListener('dragstart', (e) => {
-      const target = e.target;
-      if (target.draggable) {
-        draggedIndex = parseInt(target.dataset.index);
-        e.dataTransfer.setData('text/plain', draggedIndex);
-        target.style.opacity = '0.5';
-      }
-    });
-
-    container.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });
-
-    container.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (draggedIndex !== null) {
-        const targetIndex = parseInt(e.target.dataset.index);
-        if (!isNaN(targetIndex) && draggedIndex !== targetIndex) {
-          const newEntities = [...this._config.entities];
-          const [movedEntity] = newEntities.splice(draggedIndex, 1);
-          newEntities.splice(targetIndex, 0, movedEntity);
-          this._config = { ...this._config, entities: newEntities };
-          this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: { ...this._config } } }));
-          this.render();
-        }
-        draggedIndex = null;
-        const draggables = container.querySelectorAll('[draggable]');
-        draggables.forEach(item => item.style.opacity = '1');
-      }
-    });
-
-    container.addEventListener('dragend', (e) => {
-      if (draggedIndex !== null) {
-        const draggables = container.querySelectorAll('[draggable]');
-        draggables.forEach(item => item.style.opacity = '1');
-      }
-    });
+  // 可选：如果有自定义处理逻辑，可以保留
+  // 如果不需要特殊处理，这个方法可以删除（使用基类默认实现）
+  handleExtraConfigChange(entities, index, key, value) {
+    entities[index][key] = value;
   }
 }
