@@ -8,6 +8,12 @@ export class AiksSceneCardEditor extends AiksUnifiedCardEditor {
   // 定义额外配置：dropdown 选择执行方式
   getExtraConfig(entity) {
     return {
+            // 别名输入框
+      alias: {
+        type: 'alias', 
+        label: this._translations[this._language].anotherName,
+        defaultValue: ''
+      },
       mode: {
         type: 'select',
         label: this._language === 'zh' ? '执行方式' : 'Mode',

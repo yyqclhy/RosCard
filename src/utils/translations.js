@@ -21,6 +21,7 @@ export const TRANSLATIONS = {
       popup: '弹窗询问'
     },
     independentDisplay: '是否独立显示',
+    anotherName: '别名',
     yes: '是',
     no: '否',
   },
@@ -46,6 +47,7 @@ export const TRANSLATIONS = {
       popup: 'Popup Ask'
     },
     independentDisplay: 'Show independently',
+    anotherName: 'alias',
     yes: 'Yes',
     no: 'No',
   }

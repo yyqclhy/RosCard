@@ -59,11 +59,11 @@ export class AiksTvCardEditor extends AiksControlBase {
 
   setConfig(config) {
     const newConfig = { ...config };
-    if (!newConfig.id) newConfig.id = this.generateUUID();
+    if (!newConfig.uuid) newConfig.uuid = this.generateUUID();
 
     this._config = {
       type: newConfig.type || 'custom:aiks-tv-card',
-      id: newConfig.id,
+      uuid: newConfig.uuid,
       tv_type: newConfig.tv_type || 'android_tv',
       tv_name: newConfig.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV'),
       media_play_entity: newConfig.media_play_entity || '',

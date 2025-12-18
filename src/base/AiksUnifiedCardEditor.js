@@ -3,6 +3,7 @@ import { AiksControlBase } from './AiksControlBase.js';
 /**
  * 统一为一个灵活的基类
  * 通过配置项控制额外功能的开启和数据结构
+ * 优化布局：采用折叠展开式设计
  */
 export class AiksUnifiedCardEditor extends AiksControlBase {
   /**
@@ -13,16 +14,18 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
   }
 
   /**
+   * 生成UUID
+   */
+  generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  /**
    * 子类可以覆盖此方法获取额外配置选项
-   * @returns {Object|null} 额外配置对象，结构如:
-   * {
-   *   fieldName: {
-   *     type: 'checkbox' | 'select',
-   *     label: '标签',
-   *     defaultValue: value,  // 新增：用于自动填充默认值
-   *     options: [...] // 仅 select 类型需要
-   *   }
-   * }
    */
   getExtraConfig(entity, index) {
     return null;
@@ -41,19 +44,26 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
       entities: Array.isArray(config?.entities) ? [...config.entities] : []
     };
 
-    // 统一的默认值补充逻辑
+    // 统一的默认值补充逻辑 + UUID自动生成
     const extraConfig = this.getExtraConfig({}, 0);
-    if (extraConfig) {
-      this._config.entities = this._config.entities.map(e => {
-        const enhanced = { ...e };
+    this._config.entities = this._config.entities.map(e => {
+      const enhanced = { ...e };
+      
+      // 如果没有UUID，自动生成一个
+      if (!enhanced.uuid) {
+        enhanced.uuid = this.generateUUID();
+      }
+      
+      // 补充缺少的默认值
+      if (extraConfig) {
         Object.entries(extraConfig).forEach(([key, config]) => {
           if (!(key in enhanced) && 'defaultValue' in config) {
             enhanced[key] = config.defaultValue;
           }
         });
-        return enhanced;
-      });
-    }
+      }
+      return enhanced;
+    });
 
     this.render();
   }
@@ -92,8 +102,8 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
       entityContainer.appendChild(entityRow);
     });
 
-    // 创建新增行模板
-    const emptyRowData = { entity_id: '' };
+    // 创建新增行
+    const emptyRowData = { entity_id: '', uuid: this.generateUUID() };
     const extraConfig = this.getExtraConfig({}, 0);
     if (extraConfig) {
       Object.entries(extraConfig).forEach(([key, config]) => {
@@ -120,44 +130,120 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
+      flex-direction: column;
+      gap: 0;
       border-radius: 6px;
       background-color: ${isNewRow ? 'rgba(255, 255, 255, 0.05)' : 'transparent'};
       border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: background-color 0.2s;
+      overflow: hidden;
     `;
 
     wrapper.draggable = !isNewRow;
     wrapper.dataset.index = index;
 
+    // 第一行：拖动图标 + 实体选择器 + 删除按钮
+    const mainRow = document.createElement('div');
+    mainRow.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      transition: background-color 0.2s;
+    `;
+
     // 拖动图标
     if (!isNewRow) {
-      wrapper.appendChild(this._createDragHandle());
+      mainRow.appendChild(this._createDragHandle());
     } else {
       const placeholder = document.createElement('div');
       placeholder.style.cssText = 'width: 20px; flex-shrink: 0;';
-      wrapper.appendChild(placeholder);
+      mainRow.appendChild(placeholder);
     }
 
-    // 实体选择器
-    wrapper.appendChild(this._createEntitySelector(index, entity, isNewRow));
+    // 实体选择器（占据大部分空间）
+    mainRow.appendChild(this._createEntitySelector(index, entity, isNewRow));
 
-    // 额外配置（仅限非新增行）
+    // 展开/折叠按钮（仅限非新增行且有额外配置）
+    const extraConfig = this.getExtraConfig(entity, index);
+    if (!isNewRow && extraConfig) {
+      const toggleBtn = this._createToggleButton(index, wrapper);
+      mainRow.appendChild(toggleBtn);
+    }
+
+    // 删除按钮
     if (!isNewRow) {
-      const extraConfig = this.getExtraConfig(entity, index);
-      if (extraConfig) {
-        wrapper.appendChild(this._createExtraControls(index, entity, extraConfig));
+      mainRow.appendChild(this._createDeleteButton(index));
+    }
+
+    wrapper.appendChild(mainRow);
+
+    // 第二行：额外配置（折叠的）
+    if (!isNewRow && extraConfig) {
+      const detailRow = document.createElement('div');
+      detailRow.style.cssText = `
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        padding-top: 0;
+        background-color: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      `;
+      detailRow.id = `details-${index}`;
+
+      const controls = this._createExtraControls(index, entity, extraConfig, isNewRow);
+      detailRow.appendChild(controls);
+      wrapper.appendChild(detailRow);
+
+      // 保存展开状态引用
+      if (!this._expandedStates) {
+        this._expandedStates = {};
       }
     }
 
-    // 删除按钮（仅限非新增行）
-    if (!isNewRow) {
-      wrapper.appendChild(this._createDeleteButton(index));
-    }
-
     return wrapper;
+  }
+
+  _createToggleButton(index, wrapper) {
+    const btn = document.createElement('button');
+    btn.innerHTML = `
+      <svg style="width: 20px; height: 20px; transition: transform 0.2s;" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+      </svg>
+    `;
+    btn.style.cssText = `
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      border-radius: 4px;
+    `;
+
+    btn.addEventListener('mouseover', () => btn.style.opacity = '0.9');
+    btn.addEventListener('mouseout', () => btn.style.opacity = '0.6');
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const detailsRow = wrapper.querySelector(`[id^="details-"]`);
+      const isHidden = detailsRow.style.display === 'none';
+      
+      if (isHidden) {
+        detailsRow.style.display = 'flex';
+        btn.style.transform = 'rotate(180deg)';
+      } else {
+        detailsRow.style.display = 'none';
+        btn.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    return btn;
   }
 
   _createDragHandle() {
@@ -200,8 +286,10 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
       const selectedValue = e.detail.value;
 
       if (isNewRow && selectedValue) {
-        const newEntity = { entity_id: selectedValue };
-        // 补充默认值
+        const newEntity = { 
+          entity_id: selectedValue,
+          uuid: this.generateUUID()
+        };
         const extraConfig = this.getExtraConfig({}, 0);
         if (extraConfig) {
           Object.entries(extraConfig).forEach(([key, config]) => {
@@ -232,35 +320,38 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
     return selector;
   }
 
-  _createExtraControls(index, entity, extraConfig) {
+  _createExtraControls(index, entity, extraConfig, isNewRow = false) {
     const controlsWrapper = document.createElement('div');
     controlsWrapper.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
     `;
 
     Object.entries(extraConfig).forEach(([key, config]) => {
-      const control = this._createControl(index, entity, key, config);
+      const control = this._createControl(index, entity, key, config, isNewRow);
       controlsWrapper.appendChild(control);
     });
 
     return controlsWrapper;
   }
 
-  _createControl(index, entity, key, config) {
+  _createControl(index, entity, key, config, isNewRow = false) {
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display: flex; align-items: center; gap: 6px;';
+    wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 6px;';
 
     if (config.type === 'checkbox') {
+      const label = document.createElement('label');
+      label.textContent = config.label;
+      label.style.cssText = 'user-select: none; font-size: 0.9em; font-weight: 500;';
+
+      const checkboxWrapper = document.createElement('div');
+      checkboxWrapper.style.cssText = 'display: flex; align-items: center;';
+
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = !!entity[key];
-
-      const label = document.createElement('label');
-      label.textContent = config.label;
-      label.style.cssText = 'user-select: none; cursor: pointer; font-size: 0.9em;';
+      checkbox.style.cssText = 'cursor: pointer; margin-right: 8px;';
 
       checkbox.addEventListener('change', () => {
         const newEntities = [...this._config.entities];
@@ -273,11 +364,24 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
         }));
       });
 
-      wrapper.appendChild(checkbox);
+      checkboxWrapper.appendChild(checkbox);
       wrapper.appendChild(label);
-    } else if (config.type === 'select') {
+      wrapper.appendChild(checkboxWrapper);
+    } else if (config.type === 'select' || config.type === 'card_type') {
+      const label = document.createElement('label');
+      label.textContent = config.label;
+      label.style.cssText = 'user-select: none; font-size: 0.9em; font-weight: 500;';
+
       const select = document.createElement('select');
-      select.style.cssText = 'padding: 4px; border-radius: 4px; font-size: 0.9em;';
+      select.style.cssText = `
+        padding: 6px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.9em;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: inherit;
+        cursor: pointer;
+      `;
 
       config.options.forEach(option => {
         const opt = document.createElement('option');
@@ -298,7 +402,39 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
         }));
       });
 
+      wrapper.appendChild(label);
       wrapper.appendChild(select);
+    } else if (config.type === 'alias') {
+      const label = document.createElement('label');
+      label.textContent = config.label;
+      label.style.cssText = 'user-select: none; font-size: 0.9em; font-weight: 500;';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = config.label;
+      input.value = entity[key] || '';
+      input.style.cssText = `
+        padding: 6px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.9em;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: inherit;
+      `;
+
+      input.addEventListener('blur', () => {
+        const newEntities = [...this._config.entities];
+        this.handleExtraConfigChange(newEntities, index, key, input.value);
+        this._config = { ...this._config, entities: newEntities };
+        this.dispatchEvent(new CustomEvent('config-changed', {
+          detail: { config: this._config },
+          bubbles: true,
+          composed: true
+        }));
+      });
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
     }
 
     return wrapper;
