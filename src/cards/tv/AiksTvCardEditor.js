@@ -6,13 +6,14 @@ export class AiksTvCardEditor extends AiksControlBase {
       POWER:'POWER', UP:'UP', DOWN:'DOWN', LEFT:'LEFT', RIGHT:'RIGHT',
       CENTER:'CENTER' ,ENTER:'ENTER', BACK:'BACK', PLAY:'PLAY', PAUSE:'PAUSE',
       VOLUME_UP:'VOLUME_UP', VOLUME_DOWN:'VOLUME_DOWN',
-      MUTE:'MUTE', UN_MUTE:'UNMUTE', SETTINGS:'SETTINGS', HOME:'HOME', MENU:'MENU'
+      MUTE:'MUTE', UN_MUTE:'UNMUTE', SETTINGS:'SETTINGS', HOME:'HOME', MENU:'MENU',
+      CHANNEL_UP:'channel_up', CHANNEL_DOWN:'channel_down'
     },
     apple_tv: {
       POWER_ON:'wakeup' , POWER_OFF:'suspend', UP:'up', DOWN:'down', LEFT:'left', RIGHT:'right',
       CENTER:'select', BACK:'menu', PLAY:'play', PAUSE:'pause',
       VOLUME_UP:'volume_up', VOLUME_DOWN:'volume_down',
-      MUTE:'mute', UN_MUTE:'', SETTINGS:'wakeup', HOME:'home', MENU:'menu'
+      MUTE:'mute', UN_MUTE:'', SETTINGS:'wakeup', HOME:'home', MENU:'menu',
     }
   };
 
@@ -59,11 +60,11 @@ export class AiksTvCardEditor extends AiksControlBase {
 
   setConfig(config) {
     const newConfig = { ...config };
-    if (!newConfig.uuid) newConfig.uuid = this.generateUUID();
+    if (!newConfig.id) newConfig.id = this.generateUUID();
 
     this._config = {
       type: newConfig.type || 'custom:aiks-tv-card',
-      uuid: newConfig.uuid,
+      id: newConfig.id,
       tv_type: newConfig.tv_type || 'android_tv',
       tv_name: newConfig.tv_name || (this._language === 'zh' ? '未命名电视' : 'Unnamed TV'),
       media_play_entity: newConfig.media_play_entity || '',
@@ -227,12 +228,14 @@ export class AiksTvCardEditor extends AiksControlBase {
     const numericKeys = [
       'NUM_0','NUM_1','NUM_2','NUM_3','NUM_4',
       'NUM_5','NUM_6','NUM_7','NUM_8','NUM_9',
-      'DELETE'
+      'DELETE','KEY_A', 'KEY_B', 'KEY_C'
     ];
+    //频道按钮
+    const channelKeys = ['CHANNEL_UP', 'CHANNEL_DOWN'];
 
     const useNumeric = this._config.tv_type === 'android_tv';
     const predefinedKeys = useNumeric 
-      ? [...android_tv, ...baseKeys, ...numericKeys] 
+      ? [...android_tv, ...baseKeys, ...channelKeys, ...numericKeys] 
       : [...apple_tv, ...baseKeys];
 
     // 保留旧的实体配置
@@ -328,198 +331,233 @@ export class AiksTvCardEditor extends AiksControlBase {
       : `Unsupported type: ${type}`);
   }
 
-  _createEntityRow(index, config, hass) {
-    const row = document.createElement('div');
-    row.style.cssText = `
-      display: grid;
-      grid-template-columns: 80px 1fr auto;
-      gap: 12px;
-      align-items: center;
-      padding: 12px;
-      background-color: rgba(255, 255, 255, 0.02);
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    `;
+  //是否只允许选择remote实体
+  _isRemoteOnlyKey(key) {
+    return ['KEY_A', 'KEY_B', 'KEY_C'].includes(key);
+  }
 
-    const keyLabel = document.createElement('div');
-    keyLabel.innerText = config.key;
-    keyLabel.style.cssText = `
-      font-weight: 500;
-      font-size: 0.9em;
-    `;
-    row.appendChild(keyLabel);
+// 在 _createEntityRow 方法中，修改 row 和 compContainer 的样式
 
-    // 实体选择器（使用 ha-selector）
-    const entitySelector = document.createElement('ha-selector');
-    entitySelector.hass = hass;
-    entitySelector.selector = {
-      entity: {
-        filter: {
-          domain: ['media_player', 'remote', 'select']
-        }
+_createEntityRow(index, config, hass) {
+  const row = document.createElement('div');
+  row.style.cssText = `
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  `;
+
+  const keyLabel = document.createElement('div');
+  keyLabel.innerText = config.key;
+  keyLabel.style.cssText = `
+    font-weight: 500;
+    font-size: 0.9em;
+    align-self: start;
+    padding-top: 6px;
+  `;
+  row.appendChild(keyLabel);
+
+  // 创建右侧容器（选择器 + 控制区域）
+  const rightContainer = document.createElement('div');
+  rightContainer.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  `;
+
+  // 实体选择器
+  const entitySelector = document.createElement('ha-selector');
+  entitySelector.hass = hass;
+  const isRemoteOnly = this._isRemoteOnlyKey(config.key);
+  entitySelector.selector = {
+    entity: {
+      filter: {
+        domain: isRemoteOnly ? ['remote'] : ['media_player', 'remote', 'select']
       }
-    };
-    entitySelector.value = config.entity_id || '';
-    entitySelector.style.cssText = `
-      min-width: 0;
-    `;
+    }
+  };
+  entitySelector.value = config.entity_id || '';
+  entitySelector.style.cssText = `
+    width: 100%;
+  `;
 
-    const compContainer = document.createElement('div');
-    compContainer.style.cssText = `
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      min-width: 0;
-    `;
+  // 控制按钮和输入框的容器
+  const compContainer = document.createElement('div');
+  compContainer.style.cssText = `
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  `;
 
-    const updateRow = (patch = {}) => {
-      const next = this._config.entities.map((e, i) => 
-        i === index ? { ...e, ...patch } : e
-      );
-      this._config = { ...this._config, entities: next };
-      this.dispatchEvent(new CustomEvent('config-changed', {
-        detail: { config: this._config },
-        bubbles: true,
-        composed: true
-      }));
-    };
+  const updateRow = (patch = {}) => {
+    const next = this._config.entities.map((e, i) => 
+      i === index ? { ...e, ...patch } : e
+    );
+    this._config = { ...this._config, entities: next };
+    this.dispatchEvent(new CustomEvent('config-changed', {
+      detail: { config: this._config },
+      bubbles: true,
+      composed: true
+    }));
+  };
 
-    const renderSubComp = () => {
-      compContainer.innerHTML = '';
-      const eid = entitySelector.value;
-      const type = eid ? eid.split('.')[0] : '';
+  const renderSubComp = () => {
+    compContainer.innerHTML = '';
+    const eid = entitySelector.value;
+    const type = eid ? eid.split('.')[0] : '';
 
-      let inputEl = null;
-      if (type === 'media_player') {
-        const cmdSel = document.createElement('select');
-        cmdSel.style.cssText = `
-          padding: 6px;
-          border-radius: 4px;
-          border: 1px solid var(--divider-color);
-        `;
-        cmdSel.innerHTML = `<option value="">${this._translations[this._language].selectCommand}</option>`;
-        this._translations[this._language].mediaCommands.forEach(cmd => {
-          const opt = document.createElement('option');
-          opt.value = cmd.value;
-          opt.text = cmd.label;
-          if (cmd.value === config.value) opt.selected = true;
-          cmdSel.appendChild(opt);
-        });
-        cmdSel.addEventListener('change', () => updateRow({ value: cmdSel.value }));
-        compContainer.appendChild(cmdSel);
-        inputEl = cmdSel;
-      } else if (type === 'select' && hass.states[eid]?.attributes?.options) {
-        const optSel = document.createElement('select');
-        optSel.style.cssText = `
-          padding: 6px;
-          border-radius: 4px;
-          border: 1px solid var(--divider-color);
-        `;
-        optSel.innerHTML = `<option value="">${this._translations[this._language].selectOption}</option>`;
-        hass.states[eid].attributes.options.forEach(o => {
-          const opt = document.createElement('option');
-          opt.value = o;
-          opt.text = o;
-          if (o === config.value) opt.selected = true;
-          optSel.appendChild(opt);
-        });
-        optSel.addEventListener('change', () => updateRow({ value: optSel.value }));
-        compContainer.appendChild(optSel);
-        inputEl = optSel;
-      } else if (type === 'remote') {
-        const inp = document.createElement('input');
-        inp.type = 'text';
+    let inputEl = null;
+    
+    if (type === 'media_player') {
+      const cmdSel = document.createElement('select');
+      cmdSel.style.cssText = `
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--divider-color);
+        min-width: 150px;
+      `;
+      cmdSel.innerHTML = `<option value="">${this._translations[this._language].selectCommand}</option>`;
+      this._translations[this._language].mediaCommands.forEach(cmd => {
+        const opt = document.createElement('option');
+        opt.value = cmd.value;
+        opt.text = cmd.label;
+        if (cmd.value === config.value) opt.selected = true;
+        cmdSel.appendChild(opt);
+      });
+      cmdSel.addEventListener('change', () => updateRow({ value: cmdSel.value }));
+      compContainer.appendChild(cmdSel);
+      inputEl = cmdSel;
+    } else if (type === 'select' && hass.states[eid]?.attributes?.options) {
+      const optSel = document.createElement('select');
+      optSel.style.cssText = `
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--divider-color);
+        min-width: 150px;
+      `;
+      optSel.innerHTML = `<option value="">${this._translations[this._language].selectOption}</option>`;
+      hass.states[eid].attributes.options.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o;
+        opt.text = o;
+        if (o === config.value) opt.selected = true;
+        optSel.appendChild(opt);
+      });
+      optSel.addEventListener('change', () => updateRow({ value: optSel.value }));
+      compContainer.appendChild(optSel);
+      inputEl = optSel;
+    } else if (type === 'remote') {
+      const inp = document.createElement('input');
+      inp.type = 'text';
 
-        if (!config.value) {
+      if (!config.value) {
+        const tvt = this._config.tv_type || 'android_tv';
+        const defVal = AiksTvCardEditor.REMOTE_DEFAULTS?.[tvt]?.[config.key] || '';
+        inp.value = defVal;
+        updateRow({ value: defVal });
+      } else {
+        inp.value = config.value;
+      }
+
+      inp.style.cssText = `
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--divider-color);
+        min-width: 150px;
+      `;
+      inp.placeholder = this._translations[this._language].enterCommand;
+      inp.addEventListener('blur', () => updateRow({ value: inp.value }));
+      compContainer.appendChild(inp);
+      inputEl = inp;
+
+      const resetBtn = this._createButton(
+        this._language === 'zh' ? '恢复默认' : 'Reset',
+        () => {
           const tvt = this._config.tv_type || 'android_tv';
           const defVal = AiksTvCardEditor.REMOTE_DEFAULTS?.[tvt]?.[config.key] || '';
           inp.value = defVal;
           updateRow({ value: defVal });
-        } else {
-          inp.value = config.value;
         }
+      );
+      resetBtn.style.cssText = `
+        padding: 6px 12px;
+        font-size: 0.85em;
+        white-space: nowrap;
+      `;
+      compContainer.appendChild(resetBtn);
 
-        inp.style.cssText = `
-          padding: 6px 10px;
-          border-radius: 4px;
-          border: 1px solid var(--divider-color);
-          min-width: 150px;
-        `;
-        inp.placeholder = this._translations[this._language].enterCommand;
-        inp.addEventListener('blur', () => updateRow({ value: inp.value }));
-        compContainer.appendChild(inp);
-
-        const resetBtn = this._createButton(
-          this._language === 'zh' ? '恢复默认' : 'Reset',
-          () => {
-            const tvt = this._config.tv_type || 'android_tv';
-            const defVal = AiksTvCardEditor.REMOTE_DEFAULTS?.[tvt]?.[config.key] || '';
-            inp.value = defVal;
-            updateRow({ value: defVal });
-          }
-        );
-        resetBtn.style.padding = '4px 10px';
-        resetBtn.style.fontSize = '0.85em';
-        compContainer.appendChild(resetBtn);
-
-        const testBtn = this._createButton(
-          this._translations[this._language].testButton,
-          () => this._sendTest(
-            { key: config.key, type, entity_id: entitySelector.value, value: inp.value },
-            inp.value
-          )
-        );
-        testBtn.style.padding = '4px 10px';
-        testBtn.style.fontSize = '0.85em';
-        compContainer.appendChild(testBtn);
-      } else if (eid) {
-        const placeholder = document.createElement('span');
-        placeholder.style.cssText = `
-          font-size: 0.85em;
-          opacity: 0.6;
-        `;
-        placeholder.innerText = this._language === 'zh' ? '选择有效实体' : 'Select valid entity';
-        compContainer.appendChild(placeholder);
-      }
-
-      if (inputEl && type !== 'remote') {
-        const testBtn = this._createButton(
-          this._translations[this._language].testButton,
-          () => this._sendTest(
-            { key: config.key, type, entity_id: entitySelector.value, value: inputEl.value },
-            inputEl.value
-          )
-        );
-        testBtn.style.padding = '4px 10px';
-        testBtn.style.fontSize = '0.85em';
-        compContainer.appendChild(testBtn);
-      }
-    };
-
-    entitySelector.addEventListener('value-changed', (e) => {
-      const eid = e.detail.value || '';
-      const type = eid ? eid.split('.')[0] : '';
-
-      const patch = { entity_id: eid, type };
-
-      if (type === 'remote') {
-        const tvt = this._config.tv_type || 'android_tv';
-        patch.value = (AiksTvCardEditor.REMOTE_DEFAULTS?.[tvt]?.[config.key]) || '';
-      }
-
-      updateRow(patch);
-      renderSubComp();
-    });
-
-    if (config.entity_id) {
-      entitySelector.value = config.entity_id;
-      renderSubComp();
+      const testBtn = this._createButton(
+        this._translations[this._language].testButton,
+        () => this._sendTest(
+          { key: config.key, type, entity_id: entitySelector.value, value: inp.value },
+          inp.value
+        )
+      );
+      testBtn.style.cssText = `
+        padding: 6px 12px;
+        font-size: 0.85em;
+        white-space: nowrap;
+      `;
+      compContainer.appendChild(testBtn);
+    } else if (eid) {
+      const placeholder = document.createElement('span');
+      placeholder.style.cssText = `
+        font-size: 0.85em;
+        opacity: 0.6;
+      `;
+      placeholder.innerText = this._language === 'zh' ? '选择有效实体' : 'Select valid entity';
+      compContainer.appendChild(placeholder);
     }
 
-    row.appendChild(entitySelector);
-    row.appendChild(compContainer);
+    if (inputEl && type !== 'remote') {
+      const testBtn = this._createButton(
+        this._translations[this._language].testButton,
+        () => this._sendTest(
+          { key: config.key, type, entity_id: entitySelector.value, value: inputEl.value },
+          inputEl.value
+        )
+      );
+      testBtn.style.cssText = `
+        padding: 6px 12px;
+        font-size: 0.85em;
+        white-space: nowrap;
+      `;
+      compContainer.appendChild(testBtn);
+    }
+  };
 
-    return row;
+  entitySelector.addEventListener('value-changed', (e) => {
+    const eid = e.detail.value || '';
+    const type = eid ? eid.split('.')[0] : '';
+
+    const patch = { entity_id: eid, type };
+
+    if (type === 'remote') {
+      const tvt = this._config.tv_type || 'android_tv';
+      patch.value = (AiksTvCardEditor.REMOTE_DEFAULTS?.[tvt]?.[config.key]) || '';
+    }
+
+    updateRow(patch);
+    renderSubComp();
+  });
+
+  if (config.entity_id) {
+    entitySelector.value = config.entity_id;
+    renderSubComp();
   }
+
+  rightContainer.appendChild(entitySelector);
+  rightContainer.appendChild(compContainer);
+  row.appendChild(rightContainer);
+
+  return row;
+}
+
+
 }

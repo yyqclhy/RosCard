@@ -20,11 +20,11 @@ export class AiksSwitchMonitorCardEditor extends AiksControlBase {
 
   setConfig(config) {
     const newConfig = { ...config };
-    if (!newConfig.uuid) newConfig.uuid = this.generateUUID();
+    if (!newConfig.id) newConfig.id = this.generateUUID();
 
     this._config = {
       type: newConfig.type || 'custom:aiks-switch-monitor-card',
-      uuid: newConfig.uuid,
+      id: newConfig.id,
       monitor_name: newConfig.monitor_name || (this._language === 'zh' ? '统计卡片' : 'Unnamed Monitor'),
       device_types: newConfig.device_types || {
         light: true,

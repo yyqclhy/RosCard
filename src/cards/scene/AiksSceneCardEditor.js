@@ -9,11 +9,11 @@ export class AiksSceneCardEditor extends AiksUnifiedCardEditor {
   getExtraConfig(entity) {
     return {
             // 别名输入框
-      alias: {
-        type: 'alias', 
-        label: this._translations[this._language].anotherName,
-        defaultValue: ''
-      },
+      // alias: {
+      //   type: 'alias', 
+      //   label: this._translations[this._language].anotherName,
+      //   defaultValue: ''
+      // },
       mode: {
         type: 'select',
         label: this._language === 'zh' ? '执行方式' : 'Mode',

@@ -5,14 +5,14 @@ export class AiksWeatherCardEditor extends AiksUnifiedCardEditor {
     return 'weather';
   }
 
-  getExtraConfig() {
-    return {
-      // 别名输入框
-      alias: {
-        type: 'alias',
-        label: this._translations[this._language].anotherName,
-        defaultValue: ''
-      }
-    };
-  }
+  // getExtraConfig() {
+  //   return {
+  //     // 别名输入框
+  //     alias: {
+  //       type: 'alias',
+  //       label: this._translations[this._language].anotherName,
+  //       defaultValue: ''
+  //     }
+  //   };
+  // }
 }
