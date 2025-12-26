@@ -17,6 +17,13 @@ export class AiksMediaPlayerCardEditor extends AiksUnifiedCardEditor {
         type: 'checkbox',
         label: this._translations[this._language].independentDisplay,
         defaultValue: false  // 新增这一行
+      },
+      // ✅ 新增：remote 实体选择框
+      remoteId: {
+        type: 'entity',
+        domain: 'remote',
+        label: this._translations?.[this._language]?.remoteDevice ?? 'Remote',
+        defaultValue: ''
       }
     };
   }

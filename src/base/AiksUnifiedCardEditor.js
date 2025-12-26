@@ -404,6 +404,44 @@ export class AiksUnifiedCardEditor extends AiksControlBase {
 
       wrapper.appendChild(label);
       wrapper.appendChild(select);
+    } else if (config.type === 'entity') {
+      // ✅ 新增：实体选择器（例如 remote / light / media_player...）
+      const label = document.createElement('label');
+      label.textContent = config.label;
+      label.style.cssText = 'user-select: none; font-size: 0.9em; font-weight: 500;';
+
+      const selector = document.createElement('ha-selector');
+      selector.hass = this._hass;
+
+      // domain 用 config.domain 指定；也允许你以后扩展用 config.filter
+      selector.selector = {
+        entity: {
+          filter: config.filter ?? {
+            domain: config.domain
+          }
+        }
+      };
+
+      selector.value = entity[key] || '';
+      selector.style.cssText = `
+        width: 100%;
+        min-width: 200px;
+      `;
+
+      selector.addEventListener('value-changed', (e) => {
+        const newVal = e.detail.value || '';
+        const newEntities = [...this._config.entities];
+        this.handleExtraConfigChange(newEntities, index, key, newVal);
+        this._config = { ...this._config, entities: newEntities };
+        this.dispatchEvent(new CustomEvent('config-changed', {
+          detail: { config: this._config },
+          bubbles: true,
+          composed: true
+        }));
+      });
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(selector);
     } else if (config.type === 'alias') {
       const label = document.createElement('label');
       label.textContent = config.label;

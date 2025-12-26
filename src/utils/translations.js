@@ -24,6 +24,7 @@ export const TRANSLATIONS = {
     anotherName: '别名',
     yes: '是',
     no: '否',
+    remoteDevice : '遥控设备',
   },
   en: {
     cardTitle: (name) => `${name || 'Unnamed Device'} Card`,
@@ -50,6 +51,7 @@ export const TRANSLATIONS = {
     anotherName: 'alias',
     yes: 'Yes',
     no: 'No',
+    remoteDevice : 'remote device',
   }
 };
 
