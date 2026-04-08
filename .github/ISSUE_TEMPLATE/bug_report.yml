@@ -15,4 +15,7 @@ body:
       label: RosCard Version
   - type: input
     attributes:
+      label: Astrion Remote Version      
+  - type: input
+    attributes:
       label: Home Assistant Version
