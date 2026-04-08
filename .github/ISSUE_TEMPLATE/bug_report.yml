@@ -1,0 +1,18 @@
+name: Bug Report
+description: Report a RosCard bug
+title: "[Bug]: "
+labels: ["bug"]
+
+body:
+  - type: textarea
+    attributes:
+      label: Describe the problem
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+  - type: input
+    attributes:
+      label: RosCard Version
+  - type: input
+    attributes:
+      label: Home Assistant Version
