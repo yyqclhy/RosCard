@@ -4,6 +4,17 @@
 
 RosCard enables dynamic, state-aware control interfaces optimized for remotes, wall panels, and touch dashboards.
 
+<div align="center">
+
+[![GitHub release](https://img.shields.io/github/release/yyqclhy/RosCard.svg)](https://github.com/yyqclhy/RosCard/releases)
+[![GitHub license](https://img.shields.io/github/license/yyqclhy/RosCard)](LICENSE)
+[![HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=yyqclhy&repository=RosCard&category=integration)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-green.svg)](https://github.com/yyqclhy/RosCard/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/yyqclhy/RosCard)](https://github.com/yyqclhy/RosCard/issues)
+[![GitHub stars](https://img.shields.io/github/stars/yyqclhy/RosCard)](https://github.com/yyqclhy/RosCard/stargazers)
+
+</div>
+
 ---
 
 ## ✨ Overview
