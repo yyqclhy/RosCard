@@ -4,4 +4,6 @@
   "filename": "RosCard.js",  
   "render_readme": true,
   "version": "1.1.1", 
+  "documentation": "https://github.com/yyqclhy/RosCard",
   "homeassistant": "2023.7.0"
+}
