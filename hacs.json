@@ -1,6 +1,6 @@
 {
   "name": "Aiks Custom Card",
-  "content_in_root": true,
+  "content_in_root": false,
   "filename": "RosCard.js",  
   "render_readme": true,
   "version": "v1.1.3", 
