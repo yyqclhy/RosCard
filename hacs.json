@@ -1,6 +1,6 @@
 {
   "name": "RosCard",
-  "content_in_root": false,
+  "content_in_root": true,
   "filename": "RosCard.js",  
   "render_readme": true,
   "version": "v1.2.0", 
