@@ -1,9 +1,8 @@
 {
   "name": "RosCard",
-  "content_in_root": false,
-  "filename": "dist/RosCard.js",
+  "content_in_root": true,
+  "filename": "RosCard.js",
   "render_readme": true,
-  "category": "lovelace",
   "version": "v1.2.0",
   "homeassistant": "2023.7.0"
 }
