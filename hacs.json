@@ -3,6 +3,6 @@
   "content_in_root": false,
   "filename": "RosCard.js",
   "render_readme": true,
-  "version": "v1.2.0",
+  "version": "v1.3.0",
   "homeassistant": "2023.7.0"
 }
