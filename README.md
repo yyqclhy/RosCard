@@ -31,11 +31,12 @@ RosCard is developed as part of the broader Sanytron interface ecosystem.
 
 ### Official Links
 
+- [Sanytron](https://www.sanytron.com/)
 - [Sanytron Hub](https://hub.sanytron.com/)
 - [Sanytron Forum](https://forum.sanytron.com/)
 - [Qinkunex Profile](https://github.com/Qinkunex)
 - [r/Sanytron](https://www.reddit.com/r/Sanytron/)
-- [Sanytron Discord](https://discord.com/channels/1501881778351243315/1501883032615784580)
+- [Sanytron Discord](https://discord.gg/dh2sQrWTH)
 
 ---
 
@@ -476,7 +477,7 @@ Join the Astrion and Sanytron community:
 
 ### Discord
 Join the Sanytron community and development discussions:
-[https://discord.com/channels/1501881778351243315/1501883032615784580](https://discord.com/channels/1501881778351243315/1501883032615784580)
+[https://discord.gg/dh2sQrWTH](https://discord.gg/dh2sQrWTH)
 
 ---
 
