@@ -23,15 +23,16 @@ It provides dynamic, state-aware UI cards designed for remote-first smart home c
 
 ## 🌐 Ecosystem
 
-RosCard is developed as part of the broader Sanytron interface ecosystem.
+RosCard / Astrion Integration is developed as part of the broader Sanytron interface ecosystem.
 
+- 🌐 **Sanytron Official Website** — Product overview, news, and ecosystem hub
 - 🌐 **Sanytron Hub** — Documentation, downloads, firmware, support, and product information
 - 💬 **Sanytron Forum** — Technical discussions, feature requests, troubleshooting, and community development
 - 🧠 **Qinkunex** — Human–Object Interaction & Interface Engineering
 
 ### Official Links
 
-- [Sanytron](https://www.sanytron.com/)
+- [Sanytron Official Website](https://www.sanytron.com/)
 - [Sanytron Hub](https://hub.sanytron.com/)
 - [Sanytron Forum](https://forum.sanytron.com/)
 - [Qinkunex Profile](https://github.com/Qinkunex)
