@@ -37,7 +37,7 @@ RosCard / Astrion Integration is developed as part of the broader Sanytron inter
 - [Sanytron Forum](https://forum.sanytron.com/)
 - [Qinkunex Profile](https://github.com/Qinkunex)
 - [r/Sanytron](https://www.reddit.com/r/Sanytron/)
-- [Sanytron Discord](https://discord.gg/dh2sQrWTH)
+- [Sanytron Discord](https://discord.gg/z629RRgHBJ)
 
 ---
 
@@ -478,7 +478,7 @@ Join the Astrion and Sanytron community:
 
 ### Discord
 Join the Sanytron community and development discussions:
-[https://discord.gg/dh2sQrWTH](https://discord.gg/dh2sQrWTH)
+https://discord.gg/z629RRgHBJ
 
 ---
 
