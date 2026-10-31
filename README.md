@@ -327,6 +327,7 @@ This makes RosCard particularly useful for users who already have an established
 type: custom:ros-tv-card
 entity: media_player.living_room_tv
 media_player: media_player.shield
+keypad_brightness: 50
 power_on:
   service: script.tv_power_on
 power_off:

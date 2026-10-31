@@ -10,6 +10,8 @@ and Semantic Versioning.
 ## [1.1.2.1] - 2026-04
 ### Fixed
 - Fixed scene execution failure issue.
+### Added
+- Configurable keypad backlight brightness.
 
 ---
 
